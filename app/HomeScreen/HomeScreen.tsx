@@ -60,6 +60,8 @@ const HomeScreen: React.FC = () => {
   const [infants, setInfants] = useState(0);
   const [selectedClass, setSelectedClass] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
+  //for responive
   const { width, height } = Dimensions.get("window");
   useEffect(() => {
     setTimeout(() => {
@@ -67,21 +69,23 @@ const HomeScreen: React.FC = () => {
     }, 3000); 
   }, []);
 
-
+  //for travelller popup
   const handleTravelerModalToggle = () => {
     setTravelerModalVisible(!isTravelerModalVisible);
   };
-
+  //for class popup
   const handleClassModalToggle = () => {
     setClassModalVisible(!isClassModalVisible);
   };
 
+  //for plus button inside traveller popup
   const handleIncrement = (type: "adults" | "children" | "infants") => {
     if (type === "adults") setAdults(adults + 1);
     else if (type === "children") setChildren(children + 1);
     else if (type === "infants") setInfants(infants + 1);
   };
 
+ //for minus button inside traveller popup
   const handleDecrement = (type: "adults" | "children" | "infants") => {
     if (type === "adults" && adults > 0) setAdults(adults - 1);
     else if (type === "children" && children > 0) setChildren(children - 1);
@@ -139,11 +143,21 @@ const HomeScreen: React.FC = () => {
     setFilteredAirports(filtered);
   }, [searchQuery, airports]);
   
+  // for handling from and to airports buttons
+  const handleAirportSelect = (airportName: string) => {
+    if (selectedAirportType === "from") {
+      setFromAirport(airportName);
+    } else {
+      setToAirport(airportName);
+    }
+    setShowAirportModal(false);
+    setSearchQuery(""); // Clear search query after selection
+  };
 
-  const [dateState, setDateState] = useState({
-    departureDate: undefined as Date | undefined,
-    showDatePicker: false,
-  });
+
+
+
+
 
   const onDateChange = (event: any, selectedDate: Date | undefined) => {
     if (event.type === "set" && selectedDate) {
@@ -168,15 +182,7 @@ const HomeScreen: React.FC = () => {
     setShowDatePicker(true);
   };
 
-  const handleAirportSelect = (airportName: string) => {
-    if (selectedAirportType === "from") {
-      setFromAirport(airportName);
-    } else {
-      setToAirport(airportName);
-    }
-    setShowAirportModal(false);
-    setSearchQuery(""); // Clear search query after selection
-  };
+  
 
   const formatDate = (date: Date) => {
     const options = { weekday: "short", month: "short", day: "numeric" };
@@ -188,6 +194,9 @@ const HomeScreen: React.FC = () => {
     setClassModalVisible(false); // Close the modal after selection
   };
 
+
+
+
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   // Function to handle button press and set selected option
@@ -195,7 +204,7 @@ const HomeScreen: React.FC = () => {
     setSelectedOption(option);
   };
 
-  const handlePress = () => {};
+  const handlePress = () => {}; 
 
   const slideAnim = useRef(new Animated.Value(height)).current; // Start off-screen at the bottom
 
