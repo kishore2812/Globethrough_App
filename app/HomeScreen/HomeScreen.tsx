@@ -21,13 +21,23 @@ import axios from "axios";
 import { RadioButton } from "react-native-paper";
 import LoadingScreen from "../LoadingScreen";
 
+
+interface Location {
+  city?: string;
+  region?: string;
+  country?: string;
+}
+
+
 interface Airport {
-  icao: string;
-  iata: string;
-  name: string;
-  city: string;
-  region: string;
-  country: string;
+  countryCode?: string;
+  iata?: string;
+  icao?: string;
+  location?: Location;
+  municipalityName?: string;
+  name?: string;
+  shortName?: string;
+  timeZone?: string;
 }
 
 const HomeScreen: React.FC = () => {
@@ -92,69 +102,67 @@ const HomeScreen: React.FC = () => {
     else if (type === "infants" && infants > 0) setInfants(infants - 1);
   };
 
-  // Fetch airports based on search query
-  useEffect(() => {
-    const fetchAirports = async () => {
-      if (searchQuery.trim() === "") {
+  
+
+  //for flight search
+  const fetchAirports = async () => {
+    if (searchQuery.trim() === "") {
         setAirports([]); // Clear airports if search query is empty
         return;
-      }
-      try {
+    }
+
+    try {
+        
         const response = await axios.get(
-          `https://api.api-ninjas.com/v1/airports`,
-          {
-            headers: {
-              "X-Api-Key": "XjPaLWWYKP+hhHIXefZCbA==PuizAevleYj75RH3",
-            },
-            params: {
-              name: searchQuery,
+            `https://api.magicapi.dev/api/v1/aedbx/aerodatabox/airports/search/term`, 
+            {
+                headers: {
+                    'x-magicapi-key': 'cm3dzxkal0008jt03tsedmu2a' // Replace with your actual API key
+                },
+                params: {
+                    q: searchQuery,           // The search query
+                    limit: 10,                // Limit of results
+                    withFlightInfoOnly: false, // Optionally show airports with active flights only
+                    withSearchByCode: true     // Allow search by IATA/ICAO code
+                }
             }
-          }
         );
 
-        setAirports(response.data); // Set airports to the state
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error(
-            "Error fetching airports:",
-            error.response?.status,
-            error.message
-          );
-        } else {
-          console.error("Request failed:", error);
-        }
-      }
-    };
+        // Handle the fetched data based on its structure
+        const airportData = response.data?.items || []; // The airport data is in `items`
+        setAirports(airportData); // Update state with fetched airport data
 
+        // Filter airports immediately after fetching
+        const filtered = airportData.filter((airport: Airport) => 
+            airport.icao?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            airport.iata?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            airport.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            airport.municipalityName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            airport.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            airport.location?.region?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            airport.location?.country?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFilteredAirports(filtered);
+    } catch (error) {
+    
+    }
+};
+
+// Call fetchAirports when searchQuery changes
+useEffect(() => {
     fetchAirports();
-  }, [searchQuery]); // Dependency array includes searchQuery
+}, [searchQuery]);
 
-  // Filter the displayed airports based on the search query
-  useEffect(() => {
-    const filtered = airports.filter(
-      (airport) =>
-        airport.icao.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        airport.iata.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        airport.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        airport.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        airport.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        airport.country.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredAirports(filtered);
-  }, [searchQuery, airports]);
-  
-  // for handling from and to airports buttons
-  const handleAirportSelect = (airportName: string) => {
+// for handling from and to airports buttons
+const handleAirportSelect = (airportName: string) => {
     if (selectedAirportType === "from") {
-      setFromAirport(airportName);
+        setFromAirport(airportName);
     } else {
-      setToAirport(airportName);
+        setToAirport(airportName);
     }
     setShowAirportModal(false);
     setSearchQuery(""); // Clear search query after selection
-  };
-
-
+};
 
 
 
@@ -332,21 +340,21 @@ const HomeScreen: React.FC = () => {
               />
 
               <ScrollView style={styles.airportList}>
-                {displayedAirports.length > 0 ? (
-                  displayedAirports.map((airport, index) => (
-                    <TouchableOpacity
-                      key={`${airport.iata}-${airport.city}-${airport.country}-${index}`} // Add index for uniqueness
-                      style={styles.airportItem}
-                      onPress={() => handleAirportSelect(airport.name)}
-                    >
-                      <Text style={styles.airportText}>
-                        {airport.name} ({airport.city}, {airport.country})
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <Text style={styles.noResultsText}>No airports found</Text>
-                )}
+              {displayedAirports.length > 0 ? (
+  displayedAirports.map((airport, index) => (
+    <TouchableOpacity
+      key={`${airport.iata}-${airport.location?.city || airport.municipalityName}-${airport.location?.country || airport.countryCode}-${index}`}
+      style={styles.airportItem}
+      onPress={() => handleAirportSelect(airport.name || "Unknown Airport")} // Provide fallback for name
+    >
+      <Text style={styles.airportText}>
+        {airport.name || "Unknown Airport"} ({airport.location?.city || airport.municipalityName || "Unknown City"}, {airport.location?.country || airport.countryCode || "Unknown Country"})
+      </Text>
+    </TouchableOpacity>
+  ))
+) : (
+  <Text style={styles.noResultsText}>No airports found</Text>
+)}
               </ScrollView>
 
               {!showMoreAirports &&
