@@ -105,9 +105,10 @@ const HomeScreen: React.FC = () => {
   
 
   //for flight search
+  useEffect(() => {
   const fetchAirports = async () => {
     if (searchQuery.trim() === "") {
-        setAirports([]); // Clear airports if search query is empty
+      setFilteredAirports([]); // Clear airports if search query is empty
         return;
     }
 
@@ -149,7 +150,7 @@ const HomeScreen: React.FC = () => {
 };
 
 // Call fetchAirports when searchQuery changes
-useEffect(() => {
+
     fetchAirports();
 }, [searchQuery]);
 
@@ -193,9 +194,14 @@ const handleAirportSelect = (airportName: string) => {
   
 
   const formatDate = (date: Date) => {
-    const options = { weekday: "short", month: "short", day: "numeric" };
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: "short" as const, 
+      month: "short" as const, 
+      day: "numeric" as const 
+    };
     return date.toLocaleDateString("en-US", options);
   };
+  
 
   const handleClassSelection = (cls: string) => {
     setSelectedClass(cls); // Set the selected class
