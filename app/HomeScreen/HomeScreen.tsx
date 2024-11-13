@@ -221,15 +221,31 @@ const handleAirportSelect = (airportName: string) => {
   const handlePress = () => {}; 
 
   const slideAnim = useRef(new Animated.Value(height)).current; // Start off-screen at the bottom
+  const heightAnim = useRef(new Animated.Value(0.1)).current;   // Start with minimum height
+  const borderRadiusAnim = useRef(new Animated.Value(0)).current; // Start with 0 radius
 
+  // Trigger the animations only when isLoading becomes false
   useEffect(() => {
-    // Trigger the animation to slide the bodyCard up
-    Animated.timing(slideAnim, {
-      toValue: height * 0.0,
-      duration: 500, // Duration of the slide (500ms)
-      useNativeDriver: true, // Use native driver for performance
-    }).start();
-  }, []);
+    if (!isLoading) {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0, // Slide up to on-screen position
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heightAnim, {
+          toValue: 1, // Animate to final height (55%)
+          duration: 600,
+          useNativeDriver: false,
+        }),
+        Animated.timing(borderRadiusAnim, {
+          toValue: 20, // Animate border radius to 20
+          duration: 800,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    }
+  }, [isLoading]); // Run this effect only when isLoading changes
 
   return (
     <View style={{ flex: 1 }}>
@@ -238,8 +254,23 @@ const handleAirportSelect = (airportName: string) => {
       ) : (
     <View style={styles.container}>
       
-      <View style={styles.backgroundView} />
+      <Animated.View
+      style={[
+        styles.backgroundView,
+        {
+          height: heightAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['75%', '55%'], // Transition from 75% to 55%
+          }),
+          borderBottomLeftRadius: borderRadiusAnim,
+          borderBottomRightRadius: borderRadiusAnim,
+        },
+      ]}
+    />
+
+
       <StatusBar barStyle="default" backgroundColor="#01493E"></StatusBar>
+      
       <View style={styles.card}>
       
         <View style={styles.shapeContainer}>

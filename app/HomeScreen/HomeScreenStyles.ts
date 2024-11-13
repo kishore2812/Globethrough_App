@@ -64,15 +64,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backgroundView: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: "55%", // Take 60% of the height
-    backgroundColor: "#01493E", // Solid background color (you can change this)
-    zIndex: -10, // Ensure it appears behind the content
-    borderBottomLeftRadius: 20, // Curve at the bottom-left
-    borderBottomRightRadius: 20, // Curve at the bottom-right
+    backgroundColor: '#01493E',
+    zIndex: -10,
   },
   card: {
     width: "90%",
