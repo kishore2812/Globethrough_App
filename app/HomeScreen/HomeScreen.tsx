@@ -15,11 +15,13 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  Easing,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
 import { RadioButton } from "react-native-paper";
-import LoadingScreen from "../LoadingScreen";
+
+
 
 
 interface Location {
@@ -69,15 +71,10 @@ const HomeScreen: React.FC = () => {
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
   const [selectedClass, setSelectedClass] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+ 
 
   //for responive
   const { width, height } = Dimensions.get("window");
-  useEffect(() => {
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 3000); 
-  }, []);
 
   //for travelller popup
   const handleTravelerModalToggle = () => {
@@ -226,32 +223,33 @@ const handleAirportSelect = (airportName: string) => {
 
   // Trigger the animations only when isLoading becomes false
   useEffect(() => {
-    if (!isLoading) {
+  
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: 0, // Slide up to on-screen position
-          duration: 600,
+          duration: 500,
           useNativeDriver: true,
+          easing: Easing.ease, // Ease the animation for smoothness
         }),
         Animated.timing(heightAnim, {
           toValue: 1, // Animate to final height (55%)
-          duration: 600,
+          duration: 500,
           useNativeDriver: false,
+          easing: Easing.ease, // Ease the animation for smoothness
         }),
         Animated.timing(borderRadiusAnim, {
           toValue: 20, // Animate border radius to 20
-          duration: 800,
+          duration: 500,
           useNativeDriver: false,
+          easing: Easing.ease, // Ease the animation for smoothness
         }),
       ]).start();
-    }
-  }, [isLoading]); // Run this effect only when isLoading changes
+    
+  }, []); // Run this effect only when isLoading changes
 
   return (
-    <View style={{ flex: 1 }}>
-      {isLoading ? (
-        <LoadingScreen /> 
-      ) : (
+    
+        
     <View style={styles.container}>
       
       <Animated.View
@@ -272,7 +270,6 @@ const handleAirportSelect = (airportName: string) => {
       <StatusBar barStyle="default" backgroundColor="#01493E"></StatusBar>
       
       <View style={styles.card}>
-      
         <View style={styles.shapeContainer}>
           <View style={styles.rectangle}>
             <Text style={styles.bookmarkText}>Easy EMI Plans</Text>
@@ -640,11 +637,11 @@ const handleAirportSelect = (airportName: string) => {
         </TouchableOpacity>
         </View>
 
-        
         </Animated.View>
+      
     </View>
+    
   )}
-  </View>
-);
-};
+   
+
 export default HomeScreen;
