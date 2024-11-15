@@ -17,7 +17,7 @@ const App = () => {
     isLoading ? (
       <LoadingScreen />  // Show your custom Loading screen
     ) : (
-      <MainNavigator />  // Show Main Navigator with bottom navigation after loading is complete kishore
+      <MainNavigator />  // Show Main Navigator with bottom navigation after loading is complete 
     )
   );
 };
