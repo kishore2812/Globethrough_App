@@ -20,27 +20,27 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
 import { RadioButton } from "react-native-paper";
+import airportData from "./aiport.json";
 
 
 
 
-interface Location {
-  city?: string;
-  region?: string;
-  country?: string;
-}
-
-
-interface Airport {
-  countryCode?: string;
-  iata?: string;
-  icao?: string;
-  location?: Location;
-  municipalityName?: string;
-  name?: string;
-  shortName?: string;
-  timeZone?: string;
-}
+type Airport = {
+  ID: number;
+  Name: string;
+  City: string;
+  Country: string;
+  IATA: string;
+  ICAO: string;
+  Latitude: number;
+  Longitude: number;
+  Altitude: number;
+  Timezone: number;
+  Category: string;
+  'Timezone Name': string;
+  Type: string;
+  Source: string;
+};
 
 const HomeScreen: React.FC = () => {
   const [airports, setAirports] = useState<Airport[]>([]);
@@ -103,64 +103,36 @@ const HomeScreen: React.FC = () => {
 
   //for flight search
   useEffect(() => {
-  const fetchAirports = async () => {
     if (searchQuery.trim() === "") {
       setFilteredAirports([]); // Clear airports if search query is empty
-        return;
+      return;
     }
 
-    try {
-        
-        const response = await axios.get(
-            `https://api.magicapi.dev/api/v1/aedbx/aerodatabox/airports/search/term`, 
-            {
-                headers: {
-                    'x-magicapi-key': 'cm3dzxkal0008jt03tsedmu2a' // Replace with your actual API key
-                },
-                params: {
-                    q: searchQuery,           // The search query
-                    limit: 10,                // Limit of results
-                    withFlightInfoOnly: false, // Optionally show airports with active flights only
-                    withSearchByCode: true     // Allow search by IATA/ICAO code
-                }
-            }
-        );
+    // Filter airports from the imported JSON data
+    const filtered = airportData.filter((airport: Airport) => {  // Explicitly type airport as Airport
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        airport.Name.toLowerCase().includes(searchLower) ||
+        airport.City.toLowerCase().includes(searchLower) ||
+        airport.Country.toLowerCase().includes(searchLower) ||
+        airport.IATA.toLowerCase().includes(searchLower) ||
+        airport.ICAO.toLowerCase().includes(searchLower)
+      );
+    });
 
-        // Handle the fetched data based on its structure
-        const airportData = response.data?.items || []; // The airport data is in `items`
-        setAirports(airportData); // Update state with fetched airport data
+    setFilteredAirports(filtered);
+  }, [searchQuery]);
 
-        // Filter airports immediately after fetching
-        const filtered = airportData.filter((airport: Airport) => 
-            airport.icao?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            airport.iata?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            airport.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            airport.municipalityName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            airport.location?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            airport.location?.region?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            airport.location?.country?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setFilteredAirports(filtered);
-    } catch (error) {
-    
-    }
-};
-
-// Call fetchAirports when searchQuery changes
-
-    fetchAirports();
-}, [searchQuery]);
-
-// for handling from and to airports buttons
-const handleAirportSelect = (airportName: string) => {
+  // Handle airport selection, explicitly typing airportName as a string
+  const handleAirportSelect = (airportName: string): void => {
     if (selectedAirportType === "from") {
-        setFromAirport(airportName);
+      setFromAirport(airportName);
     } else {
-        setToAirport(airportName);
+      setToAirport(airportName);
     }
     setShowAirportModal(false);
     setSearchQuery(""); // Clear search query after selection
-};
+  };
 
 
 
@@ -377,14 +349,14 @@ const handleAirportSelect = (airportName: string) => {
               {displayedAirports.length > 0 ? (
   displayedAirports.map((airport, index) => (
     <TouchableOpacity
-      key={`${airport.iata}-${airport.location?.city || airport.municipalityName}-${airport.location?.country || airport.countryCode}-${index}`}
-      style={styles.airportItem}
-      onPress={() => handleAirportSelect(airport.name || "Unknown Airport")} // Provide fallback for name
-    >
-      <Text style={styles.airportText}>
-        {airport.name || "Unknown Airport"} ({airport.location?.city || airport.municipalityName || "Unknown City"}, {airport.location?.country || airport.countryCode || "Unknown Country"})
-      </Text>
-    </TouchableOpacity>
+    key={`${airport.IATA}-${airport.City}-${airport.Country}-${index}`}
+    style={styles.airportItem}
+    onPress={() => handleAirportSelect(airport.Name)} // Use airport name for selection
+  >
+    <Text style={styles.airportText}>
+      {airport.Name} ({airport.City}, {airport.Country})
+    </Text>
+  </TouchableOpacity>
   ))
 ) : (
   <Text style={styles.noResultsText}>No airports found</Text>
