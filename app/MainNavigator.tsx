@@ -8,9 +8,10 @@ import PackagesScreen from "./PackagesScreen/PackagesScreen";
 import BookingScreen from "./BookingScreen/BookingScreen";
 import OffersScreen from "./OffersScreen/OffersScreen";
 import AccountScreen from "./AccountScreen/AccountScreen";
+import { Dimensions } from "react-native";
 
 const Tab = createBottomTabNavigator();
-
+const { width, height } = Dimensions.get("window");
 const MainNavigator: React.FC = () => {
   return (
     <Tab.Navigator
@@ -50,7 +51,13 @@ const MainNavigator: React.FC = () => {
         tabBarInactiveTintColor: "gray",
         headerShown: false, // Disable header for all screens
         tabBarStyle: {
-          height: 65,
+          height: height * 0.08, // Responsive height based on screen height
+          paddingTop: height * 0.01, // Responsive padding top
+        },
+        tabBarLabelStyle: {
+          fontSize: width * 0.03, // Font size responsive to screen width
+          fontWeight: "bold", // Make label text bold (optional)
+          paddingBottom: height * 0.01, // Adjust padding based on screen height
         },
       })}
     >
