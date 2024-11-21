@@ -21,10 +21,9 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import axios from "axios";
 import { RadioButton } from "react-native-paper";
 import airportData from "./aiport.json";
+import CustomCalendar from "../Components/CustomCalendar";
 
 type Airport = {
   ID: number;
@@ -44,16 +43,12 @@ type Airport = {
 };
 
 const HomeScreen: React.FC = () => {
-  const [airports, setAirports] = useState<Airport[]>([]);
   const [filteredAirports, setFilteredAirports] = useState<Airport[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDateType, setSelectedDateType] = useState<
-    "departure" | "return"
-  >("departure");
-  const [departureDate, setDepartureDate] = useState(new Date());
-  const [returnDate, setReturnDate] = useState(new Date());
+  const [departureDate, setDepartureDate] = useState<Date | null>(null);
+  const [returnDate, setReturnDate] = useState<Date | null>(null);
+  const [isSelectingDeparture, setIsSelectingDeparture] = useState(true);
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAirportModal, setShowAirportModal] = useState(false);
   const [selectedAirportType, setSelectedAirportType] = useState<"from" | "to">(
     "from"
@@ -144,41 +139,72 @@ const HomeScreen: React.FC = () => {
     setSearchQuery(""); // Clear search query after selection
   };
 
-  const onDateChange = (event: any, selectedDate: Date | undefined) => {
-    if (event.type === "set" && selectedDate) {
-      if (selectedDateType === "departure") {
-        // Add a delay before setting the departure date
-        setTimeout(() => {
-          setDepartureDate(selectedDate);
-        }, 100); // 1000ms delay (1 second)
-      } else {
-        setTimeout(() => {
-          setReturnDate(selectedDate);
-        }, 100);
-      }
-    }
+  const [calendarVisible, setCalendarVisible] = useState(false);
 
-    // Immediately hide the date picker after selecting the date
-    setShowDatePicker(false);
+  const flightPrices = {
+    "2024-11-20": 120,
+    "2024-11-21": 150,
+    "2024-11-22": 180,
   };
 
-  const openDatePicker = (type: "departure" | "return") => {
-    if (type === "return" && tripType === "oneWay") {
-      return; // Prevent opening the return date picker if trip type is one way
-    }
-    setSelectedDateType(type);
-    setShowDatePicker(true);
-  };
+  const today = new Date().toISOString().split("T")[0]; // Today's date in 'YYYY-MM-DD' format
+  const minReturnDate = departureDate
+    ? departureDate.toISOString().split("T")[0]
+    : today;
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | null): string => {
+    if (!date) {
+      date = new Date(); // If date is null, set it to today's date
+    }
     const options: Intl.DateTimeFormatOptions = {
-      weekday: "short" as const,
-      month: "short" as const,
-      day: "numeric" as const,
+      weekday: "short",
+      month: "short",
+      day: "numeric",
     };
     return date.toLocaleDateString("en-US", options);
   };
 
+  // Function to handle day press from calendar
+  const handleDayPress = (day: { dateString: string }) => {
+    const selectedDate = new Date(day.dateString);
+
+    if (isSelectingDeparture) {
+      // If departure date is selected, set the return date to the departure date if it's the first time
+      setDepartureDate(selectedDate);
+
+      if (!returnDate) {
+        setReturnDate(selectedDate); // Set return date to the same as departure for the first time
+      } else if (selectedDate > returnDate) {
+        setReturnDate(selectedDate); // Reset return date if departure date is after the current return date
+      }
+    } else {
+      // Set return date as long as it's after departure date or the same day
+      if (selectedDate >= (departureDate || new Date())) {
+        setReturnDate(selectedDate);
+      } else {
+        alert("Return date must be after the departure date.");
+      }
+    }
+
+    setCalendarVisible(false);
+  };
+
+  const handleTripTypeChange = (type: "oneWay" | "roundTrip") => {
+    setTripType(type);
+    if (type === "oneWay") {
+      setReturnDate(null); // Reset return date for one-way trips
+    }
+  };
+
+  const handleDateSelection = (isDeparture: boolean) => {
+    if (tripType === "oneWay" && !isDeparture) {
+      return; // Prevent opening return date calendar for one-way trips
+    }
+    setIsSelectingDeparture(isDeparture);
+    setCalendarVisible(true);
+  };
+
+  //class selection economy,business or first
   const handleClassSelection = (cls: string) => {
     setSelectedClass(cls); // Set the selected class
     setClassModalVisible(false); // Close the modal after selection
@@ -318,7 +344,7 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.floatingLabel}>Departure Date</Text>
             <TouchableOpacity
               style={styles.dateInput}
-              onPress={() => openDatePicker("departure")}
+              onPress={() => handleDateSelection(true)}
             >
               <View>
                 <Icon
@@ -328,7 +354,7 @@ const HomeScreen: React.FC = () => {
                   style={{ marginRight: 8 }}
                 />
               </View>
-              <Text style={styles.dateText}>{formatDate(departureDate)}</Text>
+              <Text>{`${formatDate(departureDate)}`}</Text>
             </TouchableOpacity>
           </View>
 
@@ -340,12 +366,7 @@ const HomeScreen: React.FC = () => {
                 styles.dateInput,
                 tripType === "oneWay" && styles.disabledDateInput, // Apply disabled style when tripType is "oneWay"
               ]}
-              onPress={() => {
-                if (tripType !== "oneWay") {
-                  openDatePicker("return");
-                }
-              }}
-              disabled={tripType === "oneWay"} // Disable the button if it's a one-way trip
+              onPress={() => handleDateSelection(false)} // Open the return date calendar for round trips
             >
               <View>
                 <Icon
@@ -355,22 +376,22 @@ const HomeScreen: React.FC = () => {
                   style={{ marginRight: 8 }}
                 />
               </View>
-              <Text style={styles.dateText}>{formatDate(returnDate)}</Text>
+              <Text>{`${formatDate(returnDate)}`}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={
-              selectedDateType === "departure" ? departureDate : returnDate
-            }
-            mode="date"
-            display="spinner"
-            onChange={onDateChange}
-            minimumDate={
-              selectedDateType === "departure" ? new Date() : departureDate
-            }
+        {calendarVisible && (
+          <CustomCalendar
+            visible={calendarVisible}
+            flightPrices={{
+              "2024-11-20": 120,
+              "2024-11-21": 150,
+              "2024-11-22": 180,
+            }}
+            minDate={isSelectingDeparture ? today : minReturnDate} // Min date logic for departure and return
+            onDayPress={handleDayPress}
+            onClose={() => setCalendarVisible(false)}
           />
         )}
 
