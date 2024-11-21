@@ -31,93 +31,78 @@ interface CustomCalendarProps {
 
 const screenWidth = Dimensions.get("window").width;
 
-const CustomCalendar: React.FC<CustomCalendarProps> = ({
-  flightPrices,
-  onDayPress,
-  visible,
-  onClose,
-  minDate,
-  departureDate,
-}) => {
-  // Function to disable past dates (grey out the text color)
-  const isPastDate = (dateString: string) => {
-    const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
-    return dateString < today; // Check if the date is in the past
-  };
+const CustomCalendar: React.FC<CustomCalendarProps> = React.memo(
+  ({ flightPrices, onDayPress, visible, onClose }) => {
+    const today = new Date();
+    const formattedMinDate = today.toISOString().split("T")[0];
 
-  // Function to disable return date selection before departure date
-  const isReturnDateDisabled = (dateString: string) => {
-    if (departureDate) {
-      const selectedDate = new Date(dateString);
-      return selectedDate < departureDate; // Return date should be later than departure date
-    }
-    return false; // If no departure date, return date is not restricted
-  };
+    return (
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.calendarContainer}>
+            <CalendarList
+              markingType="custom"
+              horizontal={false}
+              onDayPress={(day: DateData) => {
+                if (day && day.dateString) {
+                  onDayPress({
+                    dateString: day.dateString,
+                    day: day.day,
+                    month: day.month,
+                    year: day.year,
+                    timestamp: day.timestamp,
+                  });
+                  onClose();
+                }
+              }}
+              pastScrollRange={0}
+              futureScrollRange={60}
+              scrollEnabled={true}
+              showScrollIndicator={true}
+              current={formattedMinDate}
+              dayComponent={({ date }) => {
+                const dateKey = date?.dateString || "";
+                const price = flightPrices[dateKey];
+                const disabled = dateKey < formattedMinDate;
+                const textColor = disabled ? "#d3d3d3" : "#000";
+                const priceText = price ? `$${price}` : null;
 
-  return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.calendarContainer}>
-          <CalendarList
-            markingType="custom"
-            horizontal={false} // Vertical scrolling
-            onDayPress={(day: DateData) => {
-              if (day && day.dateString) {
-                onDayPress({
-                  dateString: day.dateString,
-                  day: day.day,
-                  month: day.month,
-                  year: day.year,
-                  timestamp: day.timestamp,
-                });
-                onClose(); // Close the calendar after selecting a day
-              }
-            }}
-            minDate={minDate} // Always allow today's date or future dates for departure
-            dayComponent={({ date }) => {
-              const dateKey = date?.dateString || "";
-              const price = flightPrices[dateKey]; // Get price from the flightPrices
-              const disabled =
-                isPastDate(date?.dateString || "") ||
-                isReturnDateDisabled(date?.dateString || "");
-              const textColor = disabled ? "#d3d3d3" : "#000"; // Grayed out text for past dates or invalid return dates
-              const priceText = price ? `$${price}` : null;
-
-              return (
-                <TouchableOpacity
-                  style={styles.dayContainer}
-                  onPress={() => {
-                    if (disabled) return; // Prevent selection if the date is in the past or invalid for return
-                    onDayPress({
-                      dateString: date?.dateString || "",
-                      day: date?.day || 0,
-                      month: date?.month || 0,
-                      year: date?.year || 0,
-                      timestamp: date?.timestamp || 0,
-                    });
-                    onClose(); // Close the calendar after selecting a day
-                  }}
-                >
-                  <Text style={[styles.dayText, { color: textColor }]}>
-                    {date?.day}
-                  </Text>
-                  {priceText && (
-                    <Text style={styles.priceText}>{priceText}</Text>
-                  )}
-                </TouchableOpacity>
-              );
-            }}
-          />
+                return (
+                  <TouchableOpacity
+                    style={styles.dayContainer}
+                    onPress={() => {
+                      if (disabled) return;
+                      onDayPress({
+                        dateString: date?.dateString || "",
+                        day: date?.day || 0,
+                        month: date?.month || 0,
+                        year: date?.year || 0,
+                        timestamp: date?.timestamp || 0,
+                      });
+                      onClose();
+                    }}
+                  >
+                    <Text style={[styles.dayText, { color: textColor }]}>
+                      {date?.day}
+                    </Text>
+                    {priceText && (
+                      <Text style={styles.priceText}>{priceText}</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
         </View>
-      </View>
-    </Modal>
-  );
-};
+      </Modal>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   overlay: {

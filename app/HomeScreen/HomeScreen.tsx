@@ -198,6 +198,7 @@ const HomeScreen: React.FC = () => {
 
   const handleDateSelection = (isDeparture: boolean) => {
     if (tripType === "oneWay" && !isDeparture) {
+      alert("Return date is only Applicable for Round Trip");
       return; // Prevent opening return date calendar for one-way trips
     }
     setIsSelectingDeparture(isDeparture);

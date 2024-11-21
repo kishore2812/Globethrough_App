@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
 
   shapeContainer: {
     flexDirection: "row",
-    width: width * 0.36, // Responsive width (35% of screen width)
+    width: width * 0.33, // Responsive width (35% of screen width)
     height: RFValue(15), // Responsive height
     position: "absolute",
     top: RFValue(0), // Add some responsive top padding
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingTop: 0,
     paddingLeft: 20,
-    paddingRight: 20,
+    paddingRight: 60,
     paddingBottom: 10,
   },
   cardImage: {

@@ -1,13 +1,13 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Importing icon set
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons"; // Importing icon set
 
 // Import the actual screen components
-import HomeScreen from './HomeScreen/HomeScreen';
-import PackagesScreen from './PackagesScreen/PackagesScreen';
-import BookingScreen from './BookingScreen/BookingScreen';
-import OffersScreen from './OffersScreen/OffersScreen';
-import AccountScreen from './AccountScreen/AccountScreen';
+import HomeScreen from "./HomeScreen/HomeScreen";
+import PackagesScreen from "./PackagesScreen/PackagesScreen";
+import BookingScreen from "./BookingScreen/BookingScreen";
+import OffersScreen from "./OffersScreen/OffersScreen";
+import AccountScreen from "./AccountScreen/AccountScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -19,32 +19,39 @@ const MainNavigator: React.FC = () => {
           let iconName;
 
           switch (route.name) {
-            case 'Home':
-              iconName = 'home'; // MaterialCommunityIcons 'home' icon
+            case "Home":
+              iconName = "home"; // MaterialCommunityIcons 'home' icon
+              size = 35;
               break;
-            case 'Packages':
-              iconName = 'notebook-check-outline'; // MaterialCommunityIcons 'package' icon
+            case "Packages":
+              iconName = "notebook-check-outline"; // MaterialCommunityIcons 'package' icon
+              size = 30;
               break;
-            case 'Booking':
-              iconName = 'ticket-percent-outline'; // MaterialCommunityIcons 'clipboard-list' icon
+            case "Booking":
+              iconName = "ticket-percent-outline"; // MaterialCommunityIcons 'clipboard-list' icon
+              size = 30;
               break;
-            case 'Offers':
-              iconName = 'sale'; // MaterialCommunityIcons 'sale' icon
+            case "Offers":
+              iconName = "sale"; // MaterialCommunityIcons 'sale' icon
+              size = 30;
               break;
-            case 'Account':
-              iconName = 'account'; // MaterialCommunityIcons 'account' icon
+            case "Account":
+              iconName = "account"; // MaterialCommunityIcons 'account' icon
+              size = 30;
               break;
             default:
-              iconName = 'circle'; // Default icon
+              iconName = "circle"; // Default icon
               break;
           }
 
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#01493E',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: "#01493E",
+        tabBarInactiveTintColor: "gray",
         headerShown: false, // Disable header for all screens
-        
+        tabBarStyle: {
+          height: 65,
+        },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
