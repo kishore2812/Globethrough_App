@@ -1,7 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons"; // Importing icon set
-
+import Ionicons from "react-native-vector-icons/Ionicons";
 // Import the actual screen components
 import HomeScreen from "./HomeScreen/HomeScreen";
 import PackagesScreen from "./PackagesScreen/PackagesScreen";
@@ -29,9 +29,10 @@ const MainNavigator: React.FC = () => {
               size = 30;
               break;
             case "Booking":
-              iconName = "ticket-percent-outline"; // MaterialCommunityIcons 'clipboard-list' icon
-              size = 30;
-              break;
+              iconName = "ticket-outline"; // Ionicons 'ticket' icon for Booking
+              size = 30; // Make the icon size responsive
+              return <Ionicons name={iconName} size={size} color={color} />;
+
             case "Offers":
               iconName = "sale"; // MaterialCommunityIcons 'sale' icon
               size = 30;
