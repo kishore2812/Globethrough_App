@@ -4,8 +4,8 @@ import styles from "./HomeScreenStyles";
 import { AntDesign } from "@expo/vector-icons";
 
 import {
-  View,
   Text,
+  View,
   Image,
   TouchableOpacity,
   ScrollView,
@@ -20,11 +20,12 @@ import {
   Easing,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import airportData from "./aiport.json";
 import CustomCalendar from "../Components/CustomCalendar";
-
+import { useFonts } from "expo-font";
 type Airport = {
   ID: number;
   Name: string;
@@ -48,7 +49,7 @@ const HomeScreen: React.FC = () => {
   const [departureDate, setDepartureDate] = useState<Date | null>(null);
   const [returnDate, setReturnDate] = useState<Date | null>(null);
   const [isSelectingDeparture, setIsSelectingDeparture] = useState(true);
-  const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
+  const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("roundTrip");
   const [showAirportModal, setShowAirportModal] = useState(false);
   const [selectedAirportType, setSelectedAirportType] = useState<"from" | "to">(
     "from"
@@ -71,6 +72,17 @@ const HomeScreen: React.FC = () => {
   //for responive
   const { width, height } = Dimensions.get("window");
 
+  //for font
+  const [fontsLoaded] = useFonts({
+    "Satoshi-Regular": require("../../assets/fonts/Satoshi-Regular.otf"),
+    "Satoshi-Bold": require("../../assets/fonts/Satoshi-Bold.otf"),
+    "Satoshi-Medium": require("../../assets/fonts/Satoshi-Medium.otf"),
+  });
+
+  // Show loading spinner while fonts are loading
+  if (!fontsLoaded) {
+    return <ActivityIndicator size="large" />;
+  }
   //for travelller popup
   const handleTravelerModalToggle = () => {
     setTravelerModalVisible(!isTravelerModalVisible);
@@ -355,7 +367,9 @@ const HomeScreen: React.FC = () => {
                   style={{ marginRight: 8 }}
                 />
               </View>
-              <Text>{`${formatDate(departureDate)}`}</Text>
+              <Text style={styles.dateText}>{`${formatDate(
+                departureDate
+              )}`}</Text>
             </TouchableOpacity>
           </View>
 
@@ -377,7 +391,7 @@ const HomeScreen: React.FC = () => {
                   style={{ marginRight: 8 }}
                 />
               </View>
-              <Text>{`${formatDate(returnDate)}`}</Text>
+              <Text style={styles.dateText}>{`${formatDate(returnDate)}`}</Text>
             </TouchableOpacity>
           </View>
         </View>

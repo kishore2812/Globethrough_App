@@ -8,11 +8,24 @@ import PackagesScreen from "./PackagesScreen/PackagesScreen";
 import BookingScreen from "./BookingScreen/BookingScreen";
 import OffersScreen from "./OffersScreen/OffersScreen";
 import AccountScreen from "./AccountScreen/AccountScreen";
-import { Dimensions } from "react-native";
+import { ActivityIndicator, Dimensions } from "react-native";
+import { useFonts } from "expo-font";
 
 const Tab = createBottomTabNavigator();
 const { width, height } = Dimensions.get("window");
+
 const MainNavigator: React.FC = () => {
+  //for font
+  const [fontsLoaded] = useFonts({
+    "Satoshi-Regular": require("../assets/fonts/Satoshi-Regular.otf"),
+    "Satoshi-Bold": require("../assets/fonts/Satoshi-Bold.otf"),
+    "Satoshi-Medium": require("../assets/fonts/Satoshi-Medium.otf"),
+  });
+
+  // Show loading spinner while fonts are loading
+  if (!fontsLoaded) {
+    return <ActivityIndicator size="large" />;
+  }
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -56,6 +69,7 @@ const MainNavigator: React.FC = () => {
           paddingTop: height * 0.01, // Responsive padding top
         },
         tabBarLabelStyle: {
+          fontFamily: "Satoshi-Bold",
           fontSize: width * 0.03, // Font size responsive to screen width
           fontWeight: "bold", // Make label text bold (optional)
           paddingBottom: height * 0.01, // Adjust padding based on screen height
