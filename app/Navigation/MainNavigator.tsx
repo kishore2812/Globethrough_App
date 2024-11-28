@@ -9,8 +9,9 @@ import HomeStack from "./HomeStack"; // Import HomeStack
 import PackagesScreen from "../PackagesScreen/PackagesScreen";
 import BookingScreen from "../BookingScreen/BookingScreen";
 import OffersScreen from "../OffersScreen/OffersScreen";
-import AccountScreen from "../AccountScreen/AccountScreen";
-import FlightSearchLoadingScreen from "../FlightLoadingScreen"; // Import the loading screen
+
+
+import AccountStack from "./AccountStack";
 
 const Tab = createBottomTabNavigator();
 const { width, height } = Dimensions.get("window");
@@ -29,7 +30,7 @@ const MainNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
+    
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ color, size }) => {
@@ -82,9 +83,9 @@ const MainNavigator: React.FC = () => {
         <Tab.Screen name="Packages" component={PackagesScreen} />
         <Tab.Screen name="Booking" component={BookingScreen} />
         <Tab.Screen name="Offers" component={OffersScreen} />
-        <Tab.Screen name="Account" component={AccountScreen} />
+        <Tab.Screen name="Account" component={AccountStack} />
       </Tab.Navigator>
-      </NavigationContainer>
+   
   );
 };
 
