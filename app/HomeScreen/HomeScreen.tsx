@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import Icon from "react-native-vector-icons/Feather";
 import styles from "./HomeScreenStyles";
+import { AntDesign } from "@expo/vector-icons";
 import {
-  View,
   Text,
+  View,
   Image,
   TouchableOpacity,
   ScrollView,
@@ -16,14 +17,14 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import axios from "axios";
 import { RadioButton } from "react-native-paper";
 import airportData from "./aiport.json";
-
-
-
+import CustomCalendar from "../Components/CustomCalendar";
+import { useFonts } from "expo-font";
 
 type Airport = {
   ID: number;
@@ -37,28 +38,32 @@ type Airport = {
   Altitude: number;
   Timezone: number;
   Category: string;
-  'Timezone Name': string;
+  "Timezone Name": string;
   Type: string;
   Source: string;
 };
 
-const HomeScreen: React.FC = () => {
-  const [airports, setAirports] = useState<Airport[]>([]);
+const HomeScreen = ({ navigation }: any) => {
   const [filteredAirports, setFilteredAirports] = useState<Airport[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDateType, setSelectedDateType] = useState<
-    "departure" | "return"
-  >("departure");
-  const [departureDate, setDepartureDate] = useState(new Date());
-  const [returnDate, setReturnDate] = useState(new Date());
+  const [departureDate, setDepartureDate] = useState<Date | null>(null);
+  const [returnDate, setReturnDate] = useState<Date | null>(null);
+  const [isSelectingDeparture, setIsSelectingDeparture] = useState(true);
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAirportModal, setShowAirportModal] = useState(false);
   const [selectedAirportType, setSelectedAirportType] = useState<"from" | "to">(
     "from"
   );
   const [fromAirport, setFromAirport] = useState<string>("Select Airport");
   const [toAirport, setToAirport] = useState<string>("Select Airport");
+  const [fromAirportData, setFromAirportData] = useState<{
+    IATA: string;
+    City: string;
+  } | null>(null);
+  const [toAirportData, setToAirportData] = useState<{
+    IATA: string;
+    City: string;
+  } | null>(null);
   const [defaultAirportsCount] = useState(10);
   const [showMoreAirports, setShowMoreAirports] = useState(false);
   const displayedAirports = showMoreAirports
@@ -71,11 +76,21 @@ const HomeScreen: React.FC = () => {
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
   const [selectedClass, setSelectedClass] = useState("");
- 
 
   //for responive
   const { width, height } = Dimensions.get("window");
 
+  //for font
+  const [fontsLoaded] = useFonts({
+    "Satoshi-Regular": require("../../assets/fonts/Satoshi-Regular.otf"),
+    "Satoshi-Bold": require("../../assets/fonts/Satoshi-Bold.otf"),
+    "Satoshi-Medium": require("../../assets/fonts/Satoshi-Medium.otf"),
+  });
+
+  // Show loading spinner while fonts are loading
+  if (!fontsLoaded) {
+    return <ActivityIndicator size="large" />;
+  }
   //for travelller popup
   const handleTravelerModalToggle = () => {
     setTravelerModalVisible(!isTravelerModalVisible);
@@ -87,19 +102,22 @@ const HomeScreen: React.FC = () => {
 
   //for plus button inside traveller popup
   const handleIncrement = (type: "adults" | "children" | "infants") => {
-    if (type === "adults") setAdults(adults + 1);
-    else if (type === "children") setChildren(children + 1);
-    else if (type === "infants") setInfants(infants + 1);
+    if (type === "adults") {
+      setAdults(adults + 1);
+      setIsAdultsValid(adults + 1 > 0); // Update validation after increment
+    } else if (type === "children") {
+      setChildren(children + 1);
+    } else if (type === "infants") {
+      setInfants(infants + 1);
+    }
   };
 
- //for minus button inside traveller popup
+  //for minus button inside traveller popup
   const handleDecrement = (type: "adults" | "children" | "infants") => {
     if (type === "adults" && adults > 0) setAdults(adults - 1);
     else if (type === "children" && children > 0) setChildren(children - 1);
     else if (type === "infants" && infants > 0) setInfants(infants - 1);
   };
-
-  
 
   //for flight search
   useEffect(() => {
@@ -109,8 +127,13 @@ const HomeScreen: React.FC = () => {
     }
 
     // Filter airports from the imported JSON data
-    const filtered = airportData.filter((airport: Airport) => {  // Explicitly type airport as Airport
+    const filtered = airportData.filter((airport: Airport) => {
+      // Explicitly type airport as Airport
       const searchLower = searchQuery.toLowerCase();
+      // Only include airports where IATA is not "\\N"
+      if (airport.IATA === "\\N") {
+        return false; // Skip this airport
+      }
       return (
         airport.Name.toLowerCase().includes(searchLower) ||
         airport.City.toLowerCase().includes(searchLower) ||
@@ -124,123 +147,195 @@ const HomeScreen: React.FC = () => {
   }, [searchQuery]);
 
   // Handle airport selection, explicitly typing airportName as a string
-  const handleAirportSelect = (airportName: string): void => {
+  const handleAirportSelect = (airport: Airport): void => {
     if (selectedAirportType === "from") {
-      setFromAirport(airportName);
+      setFromAirport(airport.Name); // Set airport name
+      setFromAirportData({ IATA: airport.IATA, City: airport.City }); // Save IATA and city
+      setIsFromAirportValid(airport.Name !== "Select Airport");
     } else {
-      setToAirport(airportName);
+      setToAirport(airport.Name); // Set airport name
+      setToAirportData({ IATA: airport.IATA, City: airport.City }); // Save IATA and city
+      setIsToAirportValid(airport.Name !== "Select Airport");
     }
     setShowAirportModal(false);
-    setSearchQuery(""); // Clear search query after selection
+    setSearchQuery(""); // Clear search query
   };
 
+  const [calendarVisible, setCalendarVisible] = useState(false);
 
+  const flightPrices = {
+    "2024-11-20": 120,
+    "2024-11-21": 150,
+    "2024-11-22": 180,
+  };
 
+  const today = new Date().toISOString().split("T")[0]; // Today's date in 'YYYY-MM-DD' format
+  const minReturnDate = departureDate
+    ? departureDate.toISOString().split("T")[0]
+    : today;
 
-  const onDateChange = (event: any, selectedDate: Date | undefined) => {
-    if (event.type === "set" && selectedDate) {
-      if (selectedDateType === "departure") {
-        // Add a delay before setting the departure date
-        setTimeout(() => {
-          setDepartureDate(selectedDate);
-        }, 100); // 1000ms delay (1 second)
-      } else {
-        setTimeout(() => {
-          setReturnDate(selectedDate);
-        }, 100);
-      }
+  const formatDate = (date: Date | null): string => {
+    if (!date) {
+      date = new Date(); // If date is null, set it to today's date
     }
-
-    // Immediately hide the date picker after selecting the date
-    setShowDatePicker(false);
-  };
-
-  const openDatePicker = (type: "departure" | "return") => {
-    setSelectedDateType(type);
-    setShowDatePicker(true);
-  };
-
-  
-
-  const formatDate = (date: Date) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: "short" as const, 
-      month: "short" as const, 
-      day: "numeric" as const 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
     };
     return date.toLocaleDateString("en-US", options);
   };
-  
 
+  // Function to handle day press from calendar
+  const handleDayPress = (day: { dateString: string }) => {
+    const selectedDate = new Date(day.dateString);
+
+    if (isSelectingDeparture) {
+      // If departure date is selected, set the return date to the departure date if it's the first time
+      setDepartureDate(selectedDate);
+
+      if (!returnDate) {
+        setReturnDate(selectedDate); // Set return date to the same as departure for the first time
+      } else if (selectedDate > returnDate) {
+        setReturnDate(selectedDate); // Reset return date if departure date is after the current return date
+      }
+    } else {
+      // Set return date as long as it's after departure date or the same day
+      if (selectedDate >= (departureDate || new Date())) {
+        setReturnDate(selectedDate);
+      } else {
+        alert("Return date must be after the departure date.");
+      }
+    }
+
+    setCalendarVisible(false);
+  };
+
+  const handleTripTypeChange = (type: "oneWay" | "roundTrip") => {
+    setTripType(type);
+    if (type === "oneWay") {
+      setReturnDate(null); // Reset return date for one-way trips
+    }
+  };
+
+  const handleDateSelection = (isDeparture: boolean) => {
+    if (tripType === "oneWay" && !isDeparture) {
+      alert("Return date is only Applicable for Round Trip");
+      return; // Prevent opening return date calendar for one-way trips
+    }
+    setIsSelectingDeparture(isDeparture);
+    setCalendarVisible(true);
+  };
+
+  //class selection economy,business or first
   const handleClassSelection = (cls: string) => {
     setSelectedClass(cls); // Set the selected class
     setClassModalVisible(false); // Close the modal after selection
+    setIsClassValid(cls !== "");
   };
-
-
-
 
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   // Function to handle button press and set selected option
   const handleOptionSelect = (option: string) => {
-    setSelectedOption(option);
+    setSelectedOption((prevOption) => (prevOption === option ? null : option));
+  };
+  //validation for selection of user fields
+  const [isFromAirportValid, setIsFromAirportValid] = useState(true);
+  const [isToAirportValid, setIsToAirportValid] = useState(true);
+  const [isAdultsValid, setIsAdultsValid] = useState(true);
+  const [isClassValid, setIsClassValid] = useState(true);
+
+  const handlePress = () => {
+    // Check if from and to airports are selected
+    const isFromAirportSelected = fromAirport !== "Select Airport";
+    const isToAirportSelected = toAirport !== "Select Airport";
+
+    // Check if adults count is valid (greater than 0)
+    const isAdultsValid = adults > 0;
+
+    // Check if class is selected
+    const isClassSelected = selectedClass !== "";
+
+    // Set validation states
+    setIsFromAirportValid(isFromAirportSelected);
+    setIsToAirportValid(isToAirportSelected);
+    setIsAdultsValid(isAdultsValid);
+    setIsClassValid(isClassSelected);
+
+    // If any validation fails, prevent proceeding
+    if (
+      !isFromAirportSelected ||
+      !isToAirportSelected ||
+      !isAdultsValid ||
+      !isClassSelected
+    ) {
+      return; // Prevent further actions if any validation fails
+    }
+    // render FlightList Screen
+    navigation.navigate("FlightListScreen", {
+      fromAirport: { ...fromAirportData }, // Send IATA and city of the from airport
+      toAirport: { ...toAirportData }, // Send IATA and city of the to airport
+      adults,
+      selectedClass,
+      tripType,
+      children,
+      infants,
+      departureDate: departureDate
+        ? departureDate.toISOString()
+        : new Date().toISOString(), // Use today's date if not selected
+      returnDate: returnDate ? returnDate.toISOString() : null, // Convert to ISO string
+      selectedOption,
+    });
   };
 
-  const handlePress = () => {}; 
-
+  //Animation functions
   const slideAnim = useRef(new Animated.Value(height)).current; // Start off-screen at the bottom
-  const heightAnim = useRef(new Animated.Value(0.1)).current;   // Start with minimum height
+  const heightAnim = useRef(new Animated.Value(0.1)).current; // Start with minimum height
   const borderRadiusAnim = useRef(new Animated.Value(0)).current; // Start with 0 radius
 
   // Trigger the animations only when isLoading becomes false
   useEffect(() => {
-  
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0, // Slide up to on-screen position
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.ease, // Ease the animation for smoothness
-        }),
-        Animated.timing(heightAnim, {
-          toValue: 1, // Animate to final height (55%)
-          duration: 500,
-          useNativeDriver: false,
-          easing: Easing.ease, // Ease the animation for smoothness
-        }),
-        Animated.timing(borderRadiusAnim, {
-          toValue: 20, // Animate border radius to 20
-          duration: 500,
-          useNativeDriver: false,
-          easing: Easing.ease, // Ease the animation for smoothness
-        }),
-      ]).start();
-    
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0, // Slide up to on-screen position
+        duration: 500,
+        useNativeDriver: true,
+        easing: Easing.ease, // Ease the animation for smoothness
+      }),
+      Animated.timing(heightAnim, {
+        toValue: 1, // Animate to final height (55%)
+        duration: 500,
+        useNativeDriver: false,
+        easing: Easing.ease, // Ease the animation for smoothness
+      }),
+      Animated.timing(borderRadiusAnim, {
+        toValue: 20, // Animate border radius to 20
+        duration: 500,
+        useNativeDriver: false,
+        easing: Easing.ease, // Ease the animation for smoothness
+      }),
+    ]).start();
   }, []); // Run this effect only when isLoading changes
 
   return (
-    
-        
     <View style={styles.container}>
-      
       <Animated.View
-      style={[
-        styles.backgroundView,
-        {
-          height: heightAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['75%', '55%'], // Transition from 75% to 55%
-          }),
-          borderBottomLeftRadius: borderRadiusAnim,
-          borderBottomRightRadius: borderRadiusAnim,
-        },
-      ]}
-    />
-
+        style={[
+          styles.backgroundView,
+          {
+            height: heightAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: ["75%", "55%"], // Transition from 75% to 55%
+            }),
+            borderBottomLeftRadius: borderRadiusAnim,
+            borderBottomRightRadius: borderRadiusAnim,
+          },
+        ]}
+      />
 
       <StatusBar barStyle="default" backgroundColor="#01493E"></StatusBar>
-      
+
       <View style={styles.card}>
         <View style={styles.shapeContainer}>
           <View style={styles.rectangle}>
@@ -253,7 +348,9 @@ const HomeScreen: React.FC = () => {
         </Text>
       </View>
 
-      <Animated.View style={[styles.bodyCard, { transform: [{ translateY: slideAnim }] }]}>
+      <Animated.View
+        style={[styles.bodyCard, { transform: [{ translateY: slideAnim }] }]}
+      >
         <View style={styles.tripOptions}>
           <Pressable
             style={[
@@ -276,11 +373,12 @@ const HomeScreen: React.FC = () => {
         </View>
 
         <View style={styles.dateRow}>
+          {/* Departure Date Container */}
           <View style={styles.dateContainer}>
             <Text style={styles.floatingLabel}>Departure Date</Text>
             <TouchableOpacity
               style={styles.dateInput}
-              onPress={() => openDatePicker("departure")}
+              onPress={() => handleDateSelection(true)}
             >
               <View>
                 <Icon
@@ -290,40 +388,46 @@ const HomeScreen: React.FC = () => {
                   style={{ marginRight: 8 }}
                 />
               </View>
-              <Text style={styles.dateText}>{formatDate(departureDate)}</Text>
+              <Text style={styles.dateText}>{`${formatDate(
+                departureDate
+              )}`}</Text>
             </TouchableOpacity>
           </View>
 
+          {/* Return Date Container */}
           <View style={styles.dateContainer}>
             <Text style={styles.floatingLabel}>Return Date</Text>
             <TouchableOpacity
-              style={styles.dateInput}
-              onPress={() => openDatePicker("return")}
+              style={[
+                styles.dateInput,
+                tripType === "oneWay" && styles.disabledDateInput, // Apply disabled style when tripType is "oneWay"
+              ]}
+              onPress={() => handleDateSelection(false)} // Open the return date calendar for round trips
             >
               <View>
                 <Icon
                   name="calendar"
                   size={15}
-                  color="#888"
+                  color={tripType === "oneWay" ? "#d3d3d3" : "#888"} // Change icon color based on trip type
                   style={{ marginRight: 8 }}
                 />
               </View>
-              <Text style={styles.dateText}>{formatDate(returnDate)}</Text>
+              <Text style={styles.dateText}>{`${formatDate(returnDate)}`}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={
-              selectedDateType === "departure" ? departureDate : returnDate
-            }
-            mode="date"
-            display="spinner"
-            onChange={onDateChange}
-            minimumDate={
-              selectedDateType === "departure" ? new Date() : departureDate
-            }
+        {calendarVisible && (
+          <CustomCalendar
+            visible={calendarVisible}
+            flightPrices={{
+              "2024-11-20": 120,
+              "2024-11-21": 150,
+              "2024-11-22": 180,
+            }}
+            minDate={isSelectingDeparture ? today : minReturnDate} // Min date logic for departure and return
+            onDayPress={handleDayPress}
+            onClose={() => setCalendarVisible(false)}
           />
         )}
 
@@ -332,108 +436,178 @@ const HomeScreen: React.FC = () => {
           visible={showAirportModal}
           animationType="slide"
         >
-          <KeyboardAvoidingView
-            style={styles.modalContainer}
-            behavior={Platform.OS === "ios" ? "padding" : "height"} // Adjust behavior based on platform
-          >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Select Airport</Text>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search Airports"
-                value={searchQuery}
-                onChangeText={setSearchQuery} // Update search query
-              />
+          {/* Dismiss keyboard on touch outside */}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <KeyboardAvoidingView
+              style={styles.modalContainer}
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Select Airport</Text>
 
-              <ScrollView style={styles.airportList}>
-              {displayedAirports.length > 0 ? (
-  displayedAirports.map((airport, index) => (
-    <TouchableOpacity
-    key={`${airport.IATA}-${airport.City}-${airport.Country}-${index}`}
-    style={styles.airportItem}
-    onPress={() => handleAirportSelect(airport.Name)} // Use airport name for selection
-  >
-    <Text style={styles.airportText}>
-      {airport.Name} ({airport.City}, {airport.Country})
-    </Text>
-  </TouchableOpacity>
-  ))
-) : (
-  <Text style={styles.noResultsText}>No airports found</Text>
-)}
-              </ScrollView>
+                {/* Search Input */}
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search Airports"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
 
-              {!showMoreAirports &&
-                filteredAirports.length > defaultAirportsCount && (
-                  <TouchableOpacity
-                    onPress={() => setShowMoreAirports(true)}
-                    style={styles.showMoreButton}
-                  >
-                    
-                  </TouchableOpacity>
-                )}
+                {/* Airport List */}
+                <ScrollView
+                  style={styles.airportList}
+                  keyboardShouldPersistTaps="handled" // Ensure touches are registered even with the keyboard open
+                >
+                  {displayedAirports.length > 0 ? (
+                    displayedAirports.map((airport, index) => (
+                      <TouchableOpacity
+                        key={`${airport.IATA}-${index}`}
+                        style={styles.airportItem}
+                        onPress={() => {
+                          handleAirportSelect(airport); // Pass the full airport object
+                          Keyboard.dismiss(); // Optionally dismiss the keyboard
+                        }}
+                      >
+                        <Text style={styles.airportName}>
+                          {airport.Name} ({airport.IATA})
+                        </Text>
+                        <Text style={styles.airportDetails}>
+                          {airport.City}, {airport.Country}
+                        </Text>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <Text style={styles.noResultsText}>No airports found</Text>
+                  )}
+                </ScrollView>
 
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowAirportModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
+                {/* Cancel Button */}
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setShowAirportModal(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
         </Modal>
         <View style={styles.locationCards}>
+          {/* From Card */}
           <TouchableOpacity
-            style={styles.fromCard}
+            style={[
+              styles.fromCard,
+              !isFromAirportValid && {
+                borderColor: "#C5012D",
+                borderWidth: 1,
+              },
+            ]}
             onPress={() => {
               setSelectedAirportType("from");
               setShowAirportModal(true);
             }}
           >
-            <Text style={styles.cardTitle}>From</Text>
-            <Text style={styles.cardAirport}>{fromAirport}</Text>
+            <View style={styles.cardRow}>
+              <Text style={styles.cardTitle}>From</Text>
+              {!isFromAirportValid && (
+                <AntDesign
+                  name="exclamationcircleo"
+                  style={styles.warning_icon}
+                />
+              )}
+            </View>
+            <Text
+              style={styles.cardAirport}
+              numberOfLines={1} // Restrict to a single line
+              ellipsizeMode="tail" // Add "..." at the end if text is truncated
+            >
+              {fromAirport}
+            </Text>
           </TouchableOpacity>
 
+          {/* Icon Between Cards */}
           <Image
             source={require("../../assets/images/Route_icon.png")}
             style={styles.overlapIcon}
           />
 
+          {/* To Card */}
           <TouchableOpacity
-            style={styles.toCard}
+            style={[
+              styles.toCard,
+              !isToAirportValid && { borderColor: "#C5012D", borderWidth: 1 },
+            ]}
             onPress={() => {
               setSelectedAirportType("to");
               setShowAirportModal(true);
             }}
           >
-            <Text style={styles.cardTitle}>To</Text>
-            <Text style={styles.cardAirport}>{toAirport}</Text>
+            <View style={styles.cardRow}>
+              <Text style={styles.cardTitle}>To</Text>
+              {!isToAirportValid && (
+                <AntDesign
+                  name="exclamationcircleo"
+                  style={styles.warning_icon}
+                />
+              )}
+            </View>
+            <Text
+              style={styles.cardAirport}
+              numberOfLines={1} // Restrict to a single line
+              ellipsizeMode="tail" // Add "..." at the end if text is truncated
+            >
+              {toAirport}
+            </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.passengerClassContainer}>
           <View style={styles.passengerRow}>
             <TouchableOpacity
-              style={styles.passengerCard}
+              style={[
+                styles.passengerCard,
+                !isAdultsValid && { borderColor: "#C5012D", borderWidth: 1 }, // Red border if invalid
+              ]}
               onPress={handleTravelerModalToggle}
             >
-              <Text style={styles.passengerLabel}>Travelers</Text>
+              <Text style={styles.passengerLabel}>
+                Travelers{" "}
+                {!isAdultsValid && (
+                  <AntDesign
+                    name="exclamationcircleo"
+                    size={10}
+                    color="#C5012D"
+                  />
+                )}
+              </Text>
+
               <Text style={styles.passengerCount}>
                 {adults} Ad, {children} Ch, {infants} In
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.classCard}
+              style={[
+                styles.classCard,
+                !isClassValid && { borderColor: "#C5012D", borderWidth: 1 }, // Red border if invalid
+              ]}
               onPress={handleClassModalToggle}
             >
-              <Text style={styles.classLabel}>Class</Text>
+              <Text style={styles.classLabel}>
+                Class{" "}
+                {!isClassValid && (
+                  <AntDesign
+                    name="exclamationcircleo"
+                    size={10}
+                    color="#C5012D"
+                  />
+                )}
+              </Text>
               <Text style={styles.classSelection}>
                 {selectedClass || "Select Class"}
               </Text>
             </TouchableOpacity>
           </View>
-
 
           {/* Traveler Modal */}
           <Modal
@@ -576,9 +750,9 @@ const HomeScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.optionCard,
-                selectedOption === "Option 1" && styles.selectedOption,
+                selectedOption === "Student" && styles.selectedOption,
               ]}
-              onPress={() => handleOptionSelect("Option 1")}
+              onPress={() => handleOptionSelect("Student")}
             >
               <Text style={styles.optionText}>Student</Text>
             </TouchableOpacity>
@@ -586,9 +760,9 @@ const HomeScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.optionCard,
-                selectedOption === "Option 2" && styles.selectedOption,
+                selectedOption === "Senior Citizen" && styles.selectedOption,
               ]}
-              onPress={() => handleOptionSelect("Option 2")}
+              onPress={() => handleOptionSelect("Senior Citizen")}
             >
               <Text style={styles.optionText}>Senior Citizen</Text>
             </TouchableOpacity>
@@ -596,24 +770,20 @@ const HomeScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.optionCard,
-                selectedOption === "Option 3" && styles.selectedOption,
+                selectedOption === "Armed Force " && styles.selectedOption,
               ]}
-              onPress={() => handleOptionSelect("Option 3")}
+              onPress={() => handleOptionSelect("Armed Force ")}
             >
               <Text style={styles.optionText}>Armed Force</Text>
             </TouchableOpacity>
-            
           </View>
           <TouchableOpacity style={styles.button} onPress={handlePress}>
-          <Text style={styles.buttonText}>Search Flights</Text>
-        </TouchableOpacity>
+            <Text style={styles.buttonText}>Search Flights</Text>
+          </TouchableOpacity>
         </View>
-
-        </Animated.View>
-      
+      </Animated.View>
     </View>
-    
-  )}
-   
+  );
+};
 
 export default HomeScreen;

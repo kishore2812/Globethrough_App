@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
 
   shapeContainer: {
     flexDirection: "row",
-    width: width * 0.36, // Responsive width (35% of screen width)
+    width: width * 0.33, // Responsive width (35% of screen width)
     height: RFValue(15), // Responsive height
     position: "absolute",
     top: RFValue(0), // Add some responsive top padding
@@ -53,8 +53,9 @@ const styles = StyleSheet.create({
   },
 
   bookmarkText: {
+    fontFamily: "Satoshi-Bold",
     fontSize: RFValue(10), // Responsive font size
-    fontWeight: "bold",
+    // fontWeight: "bold",
     color: "#0B3E36",
   },
 
@@ -64,11 +65,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backgroundView: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#01493E',
+    backgroundColor: "#01493E",
     zIndex: -10,
   },
   card: {
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingTop: 0,
     paddingLeft: 20,
-    paddingRight: 20,
+    paddingRight: 60,
     paddingBottom: 10,
   },
   cardImage: {
@@ -100,6 +101,7 @@ const styles = StyleSheet.create({
     left: 0,
   },
   cardContent: {
+    fontFamily: "Satoshi-Bold",
     color: "white",
     fontSize: 12,
     marginTop: 30,
@@ -136,19 +138,21 @@ const styles = StyleSheet.create({
     borderRadius: RFValue(5), // Responsive border radius
   },
   tripButtonText: {
+    fontFamily: "Satoshi-Bold",
     fontWeight: "500",
     fontSize: RFValue(14), // Responsive font size
   },
   dateRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    gap: 10,
   },
   dateContainer: {
     flex: 1,
-    marginRight: RFValue(10), // Responsive marginRight
     position: "relative",
   },
   floatingLabel: {
+    fontFamily: "Satoshi-Regular",
     position: "absolute",
     top: RFValue(-8), // Responsive top position
     left: RFValue(10), // Responsive left position
@@ -169,12 +173,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   dateText: {
+    fontFamily: "Satoshi-Bold",
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
     paddingLeft: RFValue(2), // Responsive padding
     fontSize: RFValue(11),
     fontWeight: "600", // Responsive font size
+  },
+  disabledDateInput: {
+    opacity: 0.5, // Reduce opacity to show it's disabled
   },
 
   icon: {
@@ -199,6 +207,7 @@ const styles = StyleSheet.create({
     maxHeight: "60%", // Limit height of the airport list
   },
   modalTitle: {
+    fontFamily: "Satoshi-Bold",
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
@@ -207,6 +216,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   airportText: {
+    fontFamily: "Satoshi-Bold",
     fontSize: 16,
   },
   cancelButton: {
@@ -217,18 +227,22 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   cancelButtonText: {
+    fontFamily: "Satoshi-Bold",
     fontSize: 16,
     color: "#000",
   },
 
   locationCards: {
-    width: "100%", // Ensure it takes the full width
+    width: "100%", // Full width
+    flexDirection: "column", // Stack the items vertically
+    justifyContent: "space-between", // Distribute space evenly between the cards
+    position: "relative", // For absolute positioning of the icon relative to this container
     marginBottom: 3,
     marginTop: 15,
   },
   fromCard: {
     width: "100%", // Take up 100% of the available width (responsive)
-    backgroundColor: "#F2F2F2",
+    backgroundColor: "#E9EBEB",
     borderRadius: 5,
     padding: RFValue(10), // Responsive padding
     marginBottom: RFValue(8), // Responsive margin bottom for spacing between cards
@@ -238,7 +252,7 @@ const styles = StyleSheet.create({
   toCard: {
     marginBottom: RFValue(18), // Responsive margin for spacing between cards
     width: "100%", // Takes up 100% of the available width
-    backgroundColor: "#F2F2F2", // Light gray background color
+    backgroundColor: "#E9EBEB", // Light gray background color
     borderRadius: 5, // Rounded corners
     padding: RFValue(10), // Responsive padding
     justifyContent: "flex-start", // Align text/content to the top
@@ -248,23 +262,37 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12), // Responsive font size
     fontWeight: "bold", // Bold text
     marginBottom: RFValue(5), // Responsive margin at the bottom
+    color: "#666", // Lighter gray color for text
   },
   cardAirport: {
     fontSize: RFValue(14), // Responsive font size
-    color: "#666", // Lighter gray color for text
+    lineHeight: RFValue(16),
     fontWeight: "bold", // Bold text
   },
   overlapIcon: {
-    position: "absolute",
-    top: "50%", // Adjust the position as necessary
-    left: "50%", // Center horizontally
-    transform: [{ translateX: -25 }, { translateY: -25 }], // Adjust size and positioning
-    width: 30, // Adjust the size as needed
-    height: 30, // Adjust the size as needed
-    zIndex: 1, // Ensure the icon is on top of the cards
+    position: "absolute", // Absolute position, but relative to container
+    top: "50%", // Vertically center the icon between the cards
+    left: "50%", // Horizontally center the icon
+    marginLeft: -25, // Offset the icon by half its width
+    marginTop: -25, // Offset the icon by half its height
+    width: 30, // Icon width
+    height: 30, // Icon height
+    zIndex: 1, // Ensure icon stays on top of the cards
   },
-
+  cardRow: {
+    flexDirection: "row", // Arrange items horizontally
+    alignItems: "center", // Align items vertically in the center
+    justifyContent: "space-between", // Add space between elements
+  },
+  warning_icon: {
+    color: "#C5012D",
+    marginLeft: 4, // Space between text and icon
+    fontSize: RFValue(10), // Responsive font size
+    fontWeight: "bold", // Bold text
+    marginBottom: RFValue(5), // Responsive margin at the bottom
+  },
   searchInput: {
+    fontFamily: "Satoshi-Bold",
     height: 40,
     borderColor: "#ccc",
     borderWidth: 1,
@@ -272,18 +300,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 10,
   },
-  showMoreButton: {
-    marginTop: 10,
-    alignItems: "center",
-    padding: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
-  },
-  showMoreText: {
-    fontSize: 16,
-    color: "#007BFF",
-  },
+
   noResultsText: {
+    fontFamily: "Satoshi-Bold",
     fontSize: 16,
     color: "#888",
     textAlign: "center",
@@ -294,7 +313,6 @@ const styles = StyleSheet.create({
     marginTop: RFValue(3), // Responsive margin top
     flexDirection: "row", // Arrange children in a row
     justifyContent: "space-between", // Space out items evenly
-    paddingHorizontal: RFValue(8), // Add responsive horizontal padding (optional)
   },
   passengerRow: {
     flexDirection: "row", // Arrange children in a row
@@ -311,17 +329,19 @@ const styles = StyleSheet.create({
     borderColor: "#888", // Border color
     backgroundColor: "#fff", // White background
     borderRadius: 5, // Rounded corners
-    padding: RFValue(10), // Responsive padding inside the card
+    paddingHorizontal: RFValue(10), // Responsive padding inside the card
     justifyContent: "flex-start", // Align content to the top
     alignItems: "flex-start", // Align content to the left
   },
   passengerCount: {
-    fontSize: RFValue(12), // Responsive font size for passenger count
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(11), // Responsive font size for passenger count
     color: "#444", // Darker gray color for text
     fontWeight: "bold", // Bold text for emphasis
   },
 
   passengerLabel: {
+    fontFamily: "Satoshi-Regular",
     position: "absolute", // Position relative to the parent container
     top: RFValue(-10), // Responsive positioning, negative value for overlap
     left: RFValue(10), // Responsive left margin for label
@@ -344,12 +364,14 @@ const styles = StyleSheet.create({
   },
 
   classSelection: {
-    fontSize: RFValue(12), // Responsive font size for class selection
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(11), // Responsive font size for class selection
     color: "#444", // Dark gray color for the text
     fontWeight: "bold", // Bold text to emphasize the selection
   },
 
   classLabel: {
+    fontFamily: "Satoshi-Regular",
     position: "absolute", // Position relative to the parent container
     top: RFValue(-10), // Responsive overlap positioning
     left: RFValue(10), // Responsive left margin for label
@@ -382,6 +404,7 @@ const styles = StyleSheet.create({
   },
 
   travelerModalTitle: {
+    fontFamily: "Satoshi-Bold",
     fontSize: RFValue(18), // Responsive font size for the title
     fontWeight: "bold",
     marginBottom: RFValue(15), // Responsive margin
@@ -390,6 +413,7 @@ const styles = StyleSheet.create({
   },
 
   ageDescription: {
+    fontFamily: "Satoshi-Regular",
     fontSize: RFValue(12), // Responsive font size
     color: "#888",
     marginBottom: RFValue(5), // Responsive margin bottom
@@ -404,6 +428,7 @@ const styles = StyleSheet.create({
   },
 
   travelerOptionText: {
+    fontFamily: "Satoshi-Bold",
     fontSize: RFValue(14), // Responsive font size for option text
     color: "#333",
     fontWeight: "bold",
@@ -421,6 +446,7 @@ const styles = StyleSheet.create({
   },
 
   counterValue: {
+    fontFamily: "Satoshi-Bold",
     fontWeight: "bold",
     fontSize: RFValue(18), // Responsive font size for the counter value
     marginHorizontal: RFValue(20), // Responsive horizontal margin
@@ -437,6 +463,7 @@ const styles = StyleSheet.create({
   },
 
   closeButtonText: {
+    fontFamily: "Satoshi-Bold",
     fontWeight: "bold",
     textAlign: "center",
     color: "#fff",
@@ -471,6 +498,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle1: {
+    fontFamily: "Satoshi-Bold",
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 15,
@@ -483,14 +511,14 @@ const styles = StyleSheet.create({
     marginBottom: 15, // Add space between options
   },
   classOption1: {
+    fontFamily: "Satoshi-Medium",
     fontSize: 16,
     color: "#333",
     marginLeft: 10, // Space between the radio button and the text
   },
 
-  
-
   heading: {
+    fontFamily: "Satoshi-Bold",
     fontSize: RFValue(12), // Responsive font size for the heading
     fontWeight: "bold", // Bold font for the heading
     marginTop: RFValue(18), // Responsive margin top
@@ -507,20 +535,23 @@ const styles = StyleSheet.create({
   optionCard: {
     flex: 1, // Each card takes equal width
     borderWidth: 1,
-    borderColor: "#888", // Border color for the cards
+    borderColor: "#fff", // Border color for the cards
     alignItems: "center", // Align items to the center
     justifyContent: "center", // Center the content vertically and horizontally
     borderRadius: RFValue(4), // Responsive border radius
-    marginHorizontal: RFValue(3), // Horizontal margin between cards
+    marginHorizontal: RFValue(2), // Horizontal margin between cards
     paddingVertical: RFValue(12), // Vertical padding for spacing inside cards
+    backgroundColor: "#f2f2f2",
   },
 
   optionText: {
+    fontFamily: "Satoshi-Medium",
     fontWeight: "500",
     fontSize: RFValue(11), // Responsive font size for option text
   },
 
   selectedOption: {
+    borderColor: "#01493E",
     backgroundColor: "#f2f2f2", // Light grey background for the selected option
   },
   button: {
@@ -532,6 +563,7 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
+    fontFamily: "Satoshi-Bold",
     color: "#fff", // White text color
     fontSize: RFValue(14), // Responsive font size for button text
     fontWeight: "bold", // Bold font for emphasis
