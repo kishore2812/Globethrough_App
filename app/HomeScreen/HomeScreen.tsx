@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Icon from "react-native-vector-icons/Feather";
 import styles from "./HomeScreenStyles";
-import { AntDesign } from "@expo/vector-icons";
 import {
   Text,
   View,
@@ -23,8 +22,9 @@ import {
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import airportData from "./aiport.json";
-import CustomCalendar from "../Components/CustomCalendar";
-import { useFonts } from "expo-font";
+
+
+
 
 type Airport = {
   ID: number;
@@ -43,13 +43,17 @@ type Airport = {
   Source: string;
 };
 
-const HomeScreen = ({ navigation }: any) => {
+const HomeScreen: React.FC = () => {
+  const [airports, setAirports] = useState<Airport[]>([]);
   const [filteredAirports, setFilteredAirports] = useState<Airport[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [departureDate, setDepartureDate] = useState<Date | null>(null);
-  const [returnDate, setReturnDate] = useState<Date | null>(null);
-  const [isSelectingDeparture, setIsSelectingDeparture] = useState(true);
+  const [selectedDateType, setSelectedDateType] = useState<
+    "departure" | "return"
+  >("departure");
+  const [departureDate, setDepartureDate] = useState(new Date());
+  const [returnDate, setReturnDate] = useState(new Date());
   const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAirportModal, setShowAirportModal] = useState(false);
   const [selectedAirportType, setSelectedAirportType] = useState<"from" | "to">(
     "from"
@@ -149,60 +153,24 @@ const HomeScreen = ({ navigation }: any) => {
   // Handle airport selection, explicitly typing airportName as a string
   const handleAirportSelect = (airport: Airport): void => {
     if (selectedAirportType === "from") {
-      setFromAirport(airport.Name); // Set airport name
-      setFromAirportData({ IATA: airport.IATA, City: airport.City }); // Save IATA and city
-      setIsFromAirportValid(airport.Name !== "Select Airport");
+      setFromAirport(airportName);
     } else {
-      setToAirport(airport.Name); // Set airport name
-      setToAirportData({ IATA: airport.IATA, City: airport.City }); // Save IATA and city
-      setIsToAirportValid(airport.Name !== "Select Airport");
+      setToAirport(airportName);
     }
     setShowAirportModal(false);
-    setSearchQuery(""); // Clear search query
+    setSearchQuery(""); // Clear search query after selection
   };
 
-  const [calendarVisible, setCalendarVisible] = useState(false);
 
-  const flightPrices = {
-    "2024-11-20": 120,
-    "2024-11-21": 150,
-    "2024-11-22": 180,
-  };
 
-  const today = new Date().toISOString().split("T")[0]; // Today's date in 'YYYY-MM-DD' format
-  const minReturnDate = departureDate
-    ? departureDate.toISOString().split("T")[0]
-    : today;
 
-  const formatDate = (date: Date | null): string => {
-    if (!date) {
-      date = new Date(); // If date is null, set it to today's date
-    }
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    };
-    return date.toLocaleDateString("en-US", options);
-  };
-
-  // Function to handle day press from calendar
-  const handleDayPress = (day: { dateString: string }) => {
-    const selectedDate = new Date(day.dateString);
-
-    if (isSelectingDeparture) {
-      // If departure date is selected, set the return date to the departure date if it's the first time
-      setDepartureDate(selectedDate);
-
-      if (!returnDate) {
-        setReturnDate(selectedDate); // Set return date to the same as departure for the first time
-      } else if (selectedDate > returnDate) {
-        setReturnDate(selectedDate); // Reset return date if departure date is after the current return date
-      }
-    } else {
-      // Set return date as long as it's after departure date or the same day
-      if (selectedDate >= (departureDate || new Date())) {
-        setReturnDate(selectedDate);
+  const onDateChange = (event: any, selectedDate: Date | undefined) => {
+    if (event.type === "set" && selectedDate) {
+      if (selectedDateType === "departure") {
+        // Add a delay before setting the departure date
+        setTimeout(() => {
+          setDepartureDate(selectedDate);
+        }, 100); // 1000ms delay (1 second)
       } else {
         alert("Return date must be after the departure date.");
       }
@@ -246,50 +214,8 @@ const HomeScreen = ({ navigation }: any) => {
   const [isAdultsValid, setIsAdultsValid] = useState(true);
   const [isClassValid, setIsClassValid] = useState(true);
 
-  const handlePress = () => {
-    // Check if from and to airports are selected
-    const isFromAirportSelected = fromAirport !== "Select Airport";
-    const isToAirportSelected = toAirport !== "Select Airport";
+  const handlePress = () => {}; 
 
-    // Check if adults count is valid (greater than 0)
-    const isAdultsValid = adults > 0;
-
-    // Check if class is selected
-    const isClassSelected = selectedClass !== "";
-
-    // Set validation states
-    setIsFromAirportValid(isFromAirportSelected);
-    setIsToAirportValid(isToAirportSelected);
-    setIsAdultsValid(isAdultsValid);
-    setIsClassValid(isClassSelected);
-
-    // If any validation fails, prevent proceeding
-    if (
-      !isFromAirportSelected ||
-      !isToAirportSelected ||
-      !isAdultsValid ||
-      !isClassSelected
-    ) {
-      return; // Prevent further actions if any validation fails
-    }
-    // render FlightList Screen
-    navigation.navigate("FlightListScreen", {
-      fromAirport: { ...fromAirportData }, // Send IATA and city of the from airport
-      toAirport: { ...toAirportData }, // Send IATA and city of the to airport
-      adults,
-      selectedClass,
-      tripType,
-      children,
-      infants,
-      departureDate: departureDate
-        ? departureDate.toISOString()
-        : new Date().toISOString(), // Use today's date if not selected
-      returnDate: returnDate ? returnDate.toISOString() : null, // Convert to ISO string
-      selectedOption,
-    });
-  };
-
-  //Animation functions
   const slideAnim = useRef(new Animated.Value(height)).current; // Start off-screen at the bottom
   const heightAnim = useRef(new Animated.Value(0.1)).current; // Start with minimum height
   const borderRadiusAnim = useRef(new Animated.Value(0)).current; // Start with 0 radius
@@ -453,33 +379,23 @@ const HomeScreen = ({ navigation }: any) => {
                   onChangeText={setSearchQuery}
                 />
 
-                {/* Airport List */}
-                <ScrollView
-                  style={styles.airportList}
-                  keyboardShouldPersistTaps="handled" // Ensure touches are registered even with the keyboard open
-                >
-                  {displayedAirports.length > 0 ? (
-                    displayedAirports.map((airport, index) => (
-                      <TouchableOpacity
-                        key={`${airport.IATA}-${index}`}
-                        style={styles.airportItem}
-                        onPress={() => {
-                          handleAirportSelect(airport); // Pass the full airport object
-                          Keyboard.dismiss(); // Optionally dismiss the keyboard
-                        }}
-                      >
-                        <Text style={styles.airportName}>
-                          {airport.Name} ({airport.IATA})
-                        </Text>
-                        <Text style={styles.airportDetails}>
-                          {airport.City}, {airport.Country}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                  ) : (
-                    <Text style={styles.noResultsText}>No airports found</Text>
-                  )}
-                </ScrollView>
+              <ScrollView style={styles.airportList}>
+              {displayedAirports.length > 0 ? (
+  displayedAirports.map((airport, index) => (
+    <TouchableOpacity
+    key={`${airport.IATA}-${airport.City}-${airport.Country}-${index}`}
+    style={styles.airportItem}
+    onPress={() => handleAirportSelect(airport.Name)} // Use airport name for selection
+  >
+    <Text style={styles.airportText}>
+      {airport.Name} ({airport.City}, {airport.Country})
+    </Text>
+  </TouchableOpacity>
+  ))
+) : (
+  <Text style={styles.noResultsText}>No airports found</Text>
+)}
+              </ScrollView>
 
                 {/* Cancel Button */}
                 <TouchableOpacity

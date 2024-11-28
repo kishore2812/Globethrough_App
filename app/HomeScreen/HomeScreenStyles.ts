@@ -1,6 +1,7 @@
 import { Dimensions } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 import { StyleSheet } from "react-native";
+import { getRelativeCoords } from "react-native-reanimated";
 
 const { width, height } = Dimensions.get("window");
 

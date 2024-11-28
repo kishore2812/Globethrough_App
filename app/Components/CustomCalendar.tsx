@@ -29,7 +29,11 @@ interface CustomCalendarProps {
   minReturnDate?: string;
 }
 
+<<<<<<< HEAD
 const screenHeight = Dimensions.get("window").height;
+=======
+const screenWidth = Dimensions.get("window").width;
+>>>>>>> c63d341ea6c6c048be07f74db82be9a3975fc98e
 
 const CustomCalendar: React.FC<CustomCalendarProps> = React.memo(
   ({ flightPrices, onDayPress, visible, onClose }) => {
@@ -47,8 +51,12 @@ const CustomCalendar: React.FC<CustomCalendarProps> = React.memo(
           <View style={styles.calendarContainer}>
             <CalendarList
               markingType="custom"
+<<<<<<< HEAD
               horizontal={false} // Enable horizontal scrolling
               pagingEnabled={true} // Snap to each page (set of two calendars)
+=======
+              horizontal={false}
+>>>>>>> c63d341ea6c6c048be07f74db82be9a3975fc98e
               onDayPress={(day: DateData) => {
                 if (day && day.dateString) {
                   onDayPress({
@@ -62,11 +70,18 @@ const CustomCalendar: React.FC<CustomCalendarProps> = React.memo(
                 }
               }}
               pastScrollRange={0}
+<<<<<<< HEAD
               futureScrollRange={13}
               scrollEnabled={true}
               showScrollIndicator={false}
               current={formattedMinDate}
               calendarHeight={screenHeight / 2}
+=======
+              futureScrollRange={60}
+              scrollEnabled={true}
+              showScrollIndicator={true}
+              current={formattedMinDate}
+>>>>>>> c63d341ea6c6c048be07f74db82be9a3975fc98e
               dayComponent={({ date }) => {
                 const dateKey = date?.dateString || "";
                 const price = flightPrices[dateKey];
@@ -114,7 +129,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   calendarContainer: {
+<<<<<<< HEAD
     height: screenHeight * 1,
+=======
+>>>>>>> c63d341ea6c6c048be07f74db82be9a3975fc98e
     width: "100%",
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -135,4 +153,8 @@ const styles = StyleSheet.create({
   },
 });
 
+<<<<<<< HEAD
 export default CustomCalendar;
+=======
+export default CustomCalendar;
+>>>>>>> c63d341ea6c6c048be07f74db82be9a3975fc98e
