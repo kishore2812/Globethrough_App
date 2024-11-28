@@ -1,705 +1,572 @@
-import React, { useState, useEffect, useRef } from "react";
-import Icon from "react-native-vector-icons/Feather";
-import styles from "./HomeScreenStyles";
-import {
-  Text,
-  View,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  Pressable,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  StatusBar,
-  Animated,
-  Dimensions,
-  Easing,
-  Keyboard,
-  TouchableWithoutFeedback,
-  ActivityIndicator,
-} from "react-native";
-import { RadioButton } from "react-native-paper";
-import airportData from "./aiport.json";
+import { Dimensions } from "react-native";
+import { RFValue } from "react-native-responsive-fontsize";
+import { StyleSheet } from "react-native";
 
+const { width, height } = Dimensions.get("window");
 
+const styles = StyleSheet.create({
+  circleButton: {
+    width: 20, // Set the size of the button
+    height: 20,
+    borderRadius: 10, // This makes it circular
+    justifyContent: "center", // Centers the text horizontally
+    alignItems: "center", // Centers the text vertically
+    backgroundColor: "#fff", // Button background color
+    borderWidth: 2, // Optional: border width
+    borderColor: "#888", // Optional: border color
+  },
+  // Style for the text inside the button
+  minusButton: {
+    fontWeight: "bold",
+    fontSize: RFValue(14), // Use RFValue for responsive font size
+    color: "#888",
+    lineHeight: RFValue(15),
+  },
 
+  shapeContainer: {
+    flexDirection: "row",
+    width: width * 0.33, // Responsive width (35% of screen width)
+    height: RFValue(15), // Responsive height
+    position: "absolute",
+    top: RFValue(0), // Add some responsive top padding
+    left: RFValue(0), // Add some responsive left padding
+  },
 
-type Airport = {
-  ID: number;
-  Name: string;
-  City: string;
-  Country: string;
-  IATA: string;
-  ICAO: string;
-  Latitude: number;
-  Longitude: number;
-  Altitude: number;
-  Timezone: number;
-  Category: string;
-  "Timezone Name": string;
-  Type: string;
-  Source: string;
-};
+  rectangle: {
+    width: "90%", // Adjusts based on shapeContainer width
+    height: "100%", // Matches shapeContainer height
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    borderRadius: RFValue(2), // Adds a slight rounding to the corners for a softer look
+  },
 
-const HomeScreen: React.FC = () => {
-  const [airports, setAirports] = useState<Airport[]>([]);
-  const [filteredAirports, setFilteredAirports] = useState<Airport[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDateType, setSelectedDateType] = useState<
-    "departure" | "return"
-  >("departure");
-  const [departureDate, setDepartureDate] = useState(new Date());
-  const [returnDate, setReturnDate] = useState(new Date());
-  const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showAirportModal, setShowAirportModal] = useState(false);
-  const [selectedAirportType, setSelectedAirportType] = useState<"from" | "to">(
-    "from"
-  );
-  const [fromAirport, setFromAirport] = useState<string>("Select Airport");
-  const [toAirport, setToAirport] = useState<string>("Select Airport");
-  const [fromAirportData, setFromAirportData] = useState<{
-    IATA: string;
-    City: string;
-  } | null>(null);
-  const [toAirportData, setToAirportData] = useState<{
-    IATA: string;
-    City: string;
-  } | null>(null);
-  const [defaultAirportsCount] = useState(10);
-  const [showMoreAirports, setShowMoreAirports] = useState(false);
-  const displayedAirports = showMoreAirports
-    ? filteredAirports
-    : filteredAirports.slice(0, defaultAirportsCount);
+  diamond: {
+    marginLeft: RFValue(-7),
+    marginTop: RFValue(2), // Adjust the diamond’s position responsively
+    width: RFValue(12),
+    height: RFValue(12),
+    backgroundColor: "#0B3E36",
+    transform: [{ rotate: "45deg" }], // Keeps the diamond rotated
+    position: "relative",
+  },
 
-  const [isTravelerModalVisible, setTravelerModalVisible] = useState(false);
-  const [isClassModalVisible, setClassModalVisible] = useState(false);
-  const [adults, setAdults] = useState(0);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [selectedClass, setSelectedClass] = useState("");
+  bookmarkText: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(10), // Responsive font size
+    // fontWeight: "bold",
+    color: "#0B3E36",
+  },
 
-  //for responive
-  const { width, height } = Dimensions.get("window");
+  container: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  backgroundView: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#01493E",
+    zIndex: -10,
+  },
+  card: {
+    width: "90%",
+    height: 80,
+    backgroundColor: "#0B3E36",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
 
-  //for font
-  const [fontsLoaded] = useFonts({
-    "Satoshi-Regular": require("../../assets/fonts/Satoshi-Regular.otf"),
-    "Satoshi-Bold": require("../../assets/fonts/Satoshi-Bold.otf"),
-    "Satoshi-Medium": require("../../assets/fonts/Satoshi-Medium.otf"),
-  });
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    marginBottom: "4%",
+    marginTop: 15,
+    paddingTop: 0,
+    paddingLeft: 20,
+    paddingRight: 60,
+    paddingBottom: 10,
+  },
+  cardImage: {
+    width: 130,
+    height: 24,
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+  cardContent: {
+    fontFamily: "Satoshi-Bold",
+    color: "white",
+    fontSize: 12,
+    marginTop: 30,
+  },
+  bodyCard: {
+    width: width * 0.9, // 90% of the screen width
+    maxHeight: height * 0.75, // Maximum height as 78% of the screen height
+    backgroundColor: "#ffffff",
+    borderRadius: 15,
+    padding: RFValue(20), // Responsive padding
+    elevation: 10,
+  },
 
-  // Show loading spinner while fonts are loading
-  if (!fontsLoaded) {
-    return <ActivityIndicator size="large" />;
-  }
-  //for travelller popup
-  const handleTravelerModalToggle = () => {
-    setTravelerModalVisible(!isTravelerModalVisible);
-  };
-  //for class popup
-  const handleClassModalToggle = () => {
-    setClassModalVisible(!isClassModalVisible);
-  };
+  tripOptions: {
+    width: width * 0.6, // 80% of the screen width
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: RFValue(18), // Responsive marginBottom
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    overflow: "hidden",
+    padding: RFValue(5), // Responsive padding
+    alignSelf: "center",
+  },
+  tripButton: {
+    flex: 1,
+    padding: 10,
+    alignItems: "center",
+  },
+  selectedTripButton: {
+    backgroundColor: "#F2F2F2",
+    borderRadius: RFValue(5), // Responsive border radius
+  },
+  tripButtonText: {
+    fontFamily: "Satoshi-Bold",
+    fontWeight: "500",
+    fontSize: RFValue(14), // Responsive font size
+  },
+  dateRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  dateContainer: {
+    flex: 1,
+    position: "relative",
+  },
+  floatingLabel: {
+    fontFamily: "Satoshi-Regular",
+    position: "absolute",
+    top: RFValue(-8), // Responsive top position
+    left: RFValue(10), // Responsive left position
+    backgroundColor: "#ffffff",
+    paddingHorizontal: RFValue(5), // Responsive padding
+    fontSize: RFValue(12), // Responsive font size
+    color: "#888",
+    zIndex: 1,
+  },
+  dateInput: {
+    height: RFValue(50), // Responsive height
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: RFValue(5), // Responsive border radius
+    paddingHorizontal: RFValue(10), // Responsive padding
+    justifyContent: "flex-start",
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  dateText: {
+    fontFamily: "Satoshi-Bold",
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingLeft: RFValue(2), // Responsive padding
+    fontSize: RFValue(11),
+    fontWeight: "600", // Responsive font size
+  },
+  disabledDateInput: {
+    opacity: 0.5, // Reduce opacity to show it's disabled
+  },
 
-  //for plus button inside traveller popup
-  const handleIncrement = (type: "adults" | "children" | "infants") => {
-    if (type === "adults") {
-      setAdults(adults + 1);
-      setIsAdultsValid(adults + 1 > 0); // Update validation after increment
-    } else if (type === "children") {
-      setChildren(children + 1);
-    } else if (type === "infants") {
-      setInfants(infants + 1);
-    }
-  };
+  icon: {
+    width: RFValue(14), // Responsive width
+    height: RFValue(16), // Responsive height
+    marginRight: RFValue(6), // Responsive margin
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+  },
+  airportList: {
+    maxHeight: "60%", // Limit height of the airport list
+  },
+  modalTitle: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  airportItem: {
+    paddingVertical: 10,
+  },
+  airportText: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: 16,
+  },
+  cancelButton: {
+    marginTop: 20,
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 5,
+  },
+  cancelButtonText: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: 16,
+    color: "#000",
+  },
 
-  //for minus button inside traveller popup
-  const handleDecrement = (type: "adults" | "children" | "infants") => {
-    if (type === "adults" && adults > 0) setAdults(adults - 1);
-    else if (type === "children" && children > 0) setChildren(children - 1);
-    else if (type === "infants" && infants > 0) setInfants(infants - 1);
-  };
+  locationCards: {
+    width: "100%", // Full width
+    flexDirection: "column", // Stack the items vertically
+    justifyContent: "space-between", // Distribute space evenly between the cards
+    position: "relative", // For absolute positioning of the icon relative to this container
+    marginBottom: 3,
+    marginTop: 15,
+  },
+  fromCard: {
+    width: "100%", // Take up 100% of the available width (responsive)
+    backgroundColor: "#E9EBEB",
+    borderRadius: 5,
+    padding: RFValue(10), // Responsive padding
+    marginBottom: RFValue(8), // Responsive margin bottom for spacing between cards
+    justifyContent: "flex-start", // Align text to the left
+    alignItems: "flex-start", // Align text to the left
+  },
+  toCard: {
+    marginBottom: RFValue(18), // Responsive margin for spacing between cards
+    width: "100%", // Takes up 100% of the available width
+    backgroundColor: "#E9EBEB", // Light gray background color
+    borderRadius: 5, // Rounded corners
+    padding: RFValue(10), // Responsive padding
+    justifyContent: "flex-start", // Align text/content to the top
+    alignItems: "flex-start", // Align text/content to the left
+  },
+  cardTitle: {
+    fontSize: RFValue(12), // Responsive font size
+    fontWeight: "bold", // Bold text
+    marginBottom: RFValue(5), // Responsive margin at the bottom
+    color: "#666", // Lighter gray color for text
+  },
+  cardAirport: {
+    fontSize: RFValue(14), // Responsive font size
+    lineHeight: RFValue(16),
+    fontWeight: "bold", // Bold text
+  },
+  overlapIcon: {
+    position: "absolute", // Absolute position, but relative to container
+    top: "50%", // Vertically center the icon between the cards
+    left: "50%", // Horizontally center the icon
+    marginLeft: -25, // Offset the icon by half its width
+    marginTop: -25, // Offset the icon by half its height
+    width: 30, // Icon width
+    height: 30, // Icon height
+    zIndex: 1, // Ensure icon stays on top of the cards
+  },
+  cardRow: {
+    flexDirection: "row", // Arrange items horizontally
+    alignItems: "center", // Align items vertically in the center
+    justifyContent: "space-between", // Add space between elements
+  },
+  warning_icon: {
+    color: "#C5012D",
+    marginLeft: 4, // Space between text and icon
+    fontSize: RFValue(10), // Responsive font size
+    fontWeight: "bold", // Bold text
+    marginBottom: RFValue(5), // Responsive margin at the bottom
+  },
+  searchInput: {
+    fontFamily: "Satoshi-Bold",
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
 
-  //for flight search
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredAirports([]); // Clear airports if search query is empty
-      return;
-    }
+  noResultsText: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: 16,
+    color: "#888",
+    textAlign: "center",
+    marginTop: 20,
+  },
 
-    // Filter airports from the imported JSON data
-    const filtered = airportData.filter((airport: Airport) => {
-      // Explicitly type airport as Airport
-      const searchLower = searchQuery.toLowerCase();
-      // Only include airports where IATA is not "\\N"
-      if (airport.IATA === "\\N") {
-        return false; // Skip this airport
-      }
-      return (
-        airport.Name.toLowerCase().includes(searchLower) ||
-        airport.City.toLowerCase().includes(searchLower) ||
-        airport.Country.toLowerCase().includes(searchLower) ||
-        airport.IATA.toLowerCase().includes(searchLower) ||
-        airport.ICAO.toLowerCase().includes(searchLower)
-      );
-    });
+  passengerClassContainer: {
+    marginTop: RFValue(3), // Responsive margin top
+    flexDirection: "row", // Arrange children in a row
+    justifyContent: "space-between", // Space out items evenly
+  },
+  passengerRow: {
+    flexDirection: "row", // Arrange children in a row
+    justifyContent: "space-between", // Space items evenly
+    width: "100%", // Take full width of the parent container
+    marginBottom: RFValue(1), // Optional margin for spacing between rows
+  },
 
-    setFilteredAirports(filtered);
-  }, [searchQuery]);
+  passengerCard: {
+    paddingVertical: RFValue(15),
+    flex: 1, // Take up equal space in the row
+    marginRight: RFValue(10), // Responsive margin on the right
+    borderWidth: 1,
+    borderColor: "#888", // Border color
+    backgroundColor: "#fff", // White background
+    borderRadius: 5, // Rounded corners
+    paddingHorizontal: RFValue(10), // Responsive padding inside the card
+    justifyContent: "flex-start", // Align content to the top
+    alignItems: "flex-start", // Align content to the left
+  },
+  passengerCount: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(11), // Responsive font size for passenger count
+    color: "#444", // Darker gray color for text
+    fontWeight: "bold", // Bold text for emphasis
+  },
 
-  // Handle airport selection, explicitly typing airportName as a string
-  const handleAirportSelect = (airport: Airport): void => {
-    if (selectedAirportType === "from") {
-      setFromAirport(airportName);
-    } else {
-      setToAirport(airportName);
-    }
-    setShowAirportModal(false);
-    setSearchQuery(""); // Clear search query after selection
-  };
+  passengerLabel: {
+    fontFamily: "Satoshi-Regular",
+    position: "absolute", // Position relative to the parent container
+    top: RFValue(-10), // Responsive positioning, negative value for overlap
+    left: RFValue(10), // Responsive left margin for label
+    backgroundColor: "#ffffff", // White background for label
+    paddingHorizontal: RFValue(4), // Responsive padding for label
+    fontSize: RFValue(12), // Responsive font size for label text
+    color: "#888", // Light gray color for the label text
+    zIndex: 1, // Ensure label appears above other content
+  },
+  classCard: {
+    paddingVertical: RFValue(15),
+    borderWidth: 1,
+    borderColor: "#888", // Border color for the card
+    flex: 1, // Ensure it takes equal space in a row
+    backgroundColor: "#fff", // White background for the card
+    borderRadius: 5, // Rounded corners
+    padding: RFValue(10), // Responsive padding inside the card
+    justifyContent: "flex-start", // Align content to the top
+    alignItems: "flex-start", // Align content to the left
+  },
 
+  classSelection: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(11), // Responsive font size for class selection
+    color: "#444", // Dark gray color for the text
+    fontWeight: "bold", // Bold text to emphasize the selection
+  },
 
+  classLabel: {
+    fontFamily: "Satoshi-Regular",
+    position: "absolute", // Position relative to the parent container
+    top: RFValue(-10), // Responsive overlap positioning
+    left: RFValue(10), // Responsive left margin for label
+    backgroundColor: "#ffffff", // White background to make label readable
+    paddingHorizontal: RFValue(4), // Responsive horizontal padding
+    fontSize: RFValue(12), // Responsive font size for label
+    color: "#888", // Light gray color for the label text
+    zIndex: 1, // Ensure label appears above other elements
+  },
 
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.1)", // Semi-transparent overlay
+    justifyContent: "center",
+    alignItems: "center", // Position the modal at the bottom
+  },
+  travelerModalContainer: {
+    top: 80,
+    width: "90%", // Full width with some margin
+    height: height * 0.8, // 80% height of the screen
+    backgroundColor: "#fff",
+    padding: RFValue(20), // Responsive padding
+    borderRadius: RFValue(15), // Responsive border radius
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.3,
+    shadowRadius: RFValue(4), // Responsive shadow radius
+    elevation: RFValue(3), // Responsive elevation
+    position: "absolute", // Make the modal position absolute
+  },
 
-  const onDateChange = (event: any, selectedDate: Date | undefined) => {
-    if (event.type === "set" && selectedDate) {
-      if (selectedDateType === "departure") {
-        // Add a delay before setting the departure date
-        setTimeout(() => {
-          setDepartureDate(selectedDate);
-        }, 100); // 1000ms delay (1 second)
-      } else {
-        alert("Return date must be after the departure date.");
-      }
-    }
+  travelerModalTitle: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(18), // Responsive font size for the title
+    fontWeight: "bold",
+    marginBottom: RFValue(15), // Responsive margin
+    textAlign: "left",
+    color: "#333",
+  },
 
-    setCalendarVisible(false);
-  };
+  ageDescription: {
+    fontFamily: "Satoshi-Regular",
+    fontSize: RFValue(12), // Responsive font size
+    color: "#888",
+    marginBottom: RFValue(5), // Responsive margin bottom
+  },
 
-  const handleTripTypeChange = (type: "oneWay" | "roundTrip") => {
-    setTripType(type);
-    if (type === "oneWay") {
-      setReturnDate(null); // Reset return date for one-way trips
-    }
-  };
+  travelerOptionContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: RFValue(2), // Responsive margin
+    paddingVertical: RFValue(10), // Responsive vertical padding
+  },
 
-  const handleDateSelection = (isDeparture: boolean) => {
-    if (tripType === "oneWay" && !isDeparture) {
-      alert("Return date is only Applicable for Round Trip");
-      return; // Prevent opening return date calendar for one-way trips
-    }
-    setIsSelectingDeparture(isDeparture);
-    setCalendarVisible(true);
-  };
+  travelerOptionText: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(14), // Responsive font size for option text
+    color: "#333",
+    fontWeight: "bold",
+  },
 
-  //class selection economy,business or first
-  const handleClassSelection = (cls: string) => {
-    setSelectedClass(cls); // Set the selected class
-    setClassModalVisible(false); // Close the modal after selection
-    setIsClassValid(cls !== "");
-  };
+  counterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  counterButtonImage: {
+    width: RFValue(18), // Responsive width for the icon
+    height: RFValue(18), // Responsive height for the icon
+    resizeMode: "contain", // Keep the aspect ratio of the image
+  },
 
-  // Function to handle button press and set selected option
-  const handleOptionSelect = (option: string) => {
-    setSelectedOption((prevOption) => (prevOption === option ? null : option));
-  };
-  //validation for selection of user fields
-  const [isFromAirportValid, setIsFromAirportValid] = useState(true);
-  const [isToAirportValid, setIsToAirportValid] = useState(true);
-  const [isAdultsValid, setIsAdultsValid] = useState(true);
-  const [isClassValid, setIsClassValid] = useState(true);
+  counterValue: {
+    fontFamily: "Satoshi-Bold",
+    fontWeight: "bold",
+    fontSize: RFValue(18), // Responsive font size for the counter value
+    marginHorizontal: RFValue(20), // Responsive horizontal margin
+  },
 
-  const handlePress = () => {}; 
+  closeArrowContainer: {
+    zIndex: 1,
+    marginBottom: RFValue(20), // Responsive margin bottom
+  },
 
-  const slideAnim = useRef(new Animated.Value(height)).current; // Start off-screen at the bottom
-  const heightAnim = useRef(new Animated.Value(0.1)).current; // Start with minimum height
-  const borderRadiusAnim = useRef(new Animated.Value(0)).current; // Start with 0 radius
+  closeArrowImage: {
+    width: RFValue(30), // Responsive width for the arrow image
+    // Responsive height for the arrow image
+  },
 
-  // Trigger the animations only when isLoading becomes false
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0, // Slide up to on-screen position
-        duration: 500,
-        useNativeDriver: true,
-        easing: Easing.ease, // Ease the animation for smoothness
-      }),
-      Animated.timing(heightAnim, {
-        toValue: 1, // Animate to final height (55%)
-        duration: 500,
-        useNativeDriver: false,
-        easing: Easing.ease, // Ease the animation for smoothness
-      }),
-      Animated.timing(borderRadiusAnim, {
-        toValue: 20, // Animate border radius to 20
-        duration: 500,
-        useNativeDriver: false,
-        easing: Easing.ease, // Ease the animation for smoothness
-      }),
-    ]).start();
-  }, []); // Run this effect only when isLoading changes
+  closeButtonText: {
+    fontFamily: "Satoshi-Bold",
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#fff",
+    fontSize: RFValue(14), // Responsive font size
+    borderRadius: RFValue(5), // Responsive border radius
+  },
 
-  return (
-    <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.backgroundView,
-          {
-            height: heightAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: ["75%", "55%"], // Transition from 75% to 55%
-            }),
-            borderBottomLeftRadius: borderRadiusAnim,
-            borderBottomRightRadius: borderRadiusAnim,
-          },
-        ]}
-      />
+  closeButton: {
+    padding: RFValue(15), // Responsive padding
+    backgroundColor: "#01493E",
+    borderRadius: RFValue(5), // Responsive border radius
+    marginTop: RFValue(180), // Responsive margin top
+    // Responsive margin bottom
+  },
 
-      <StatusBar barStyle="default" backgroundColor="#01493E"></StatusBar>
+  modalOverlay1: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent dark background
+  },
+  modalContent1: {
+    width: 250,
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 12,
+    alignItems: "flex-start", // Align radio buttons and text to the left
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle1: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#333",
+  },
+  modalOption1: {
+    flexDirection: "row", // Align radio button and text horizontally
+    alignItems: "center", // Align items in the center vertically
+    width: "100%",
+    marginBottom: 15, // Add space between options
+  },
+  classOption1: {
+    fontFamily: "Satoshi-Medium",
+    fontSize: 16,
+    color: "#333",
+    marginLeft: 10, // Space between the radio button and the text
+  },
 
-      <View style={styles.card}>
-        <View style={styles.shapeContainer}>
-          <View style={styles.rectangle}>
-            <Text style={styles.bookmarkText}>Easy EMI Plans</Text>
-          </View>
-          <View style={styles.diamond}></View>
-        </View>
-        <Text style={styles.cardContent}>
-          Get your dream flight with flexible EMI options that suit your budget.
-        </Text>
-      </View>
+  heading: {
+    fontFamily: "Satoshi-Bold",
+    fontSize: RFValue(12), // Responsive font size for the heading
+    fontWeight: "bold", // Bold font for the heading
+    marginTop: RFValue(18), // Responsive margin top
+    marginBottom: RFValue(12), // Responsive margin bottom
+    textAlign: "left", // Align text to the left
+  },
 
-      <Animated.View
-        style={[styles.bodyCard, { transform: [{ translateY: slideAnim }] }]}
-      >
-        <View style={styles.tripOptions}>
-          <Pressable
-            style={[
-              styles.tripButton,
-              tripType === "oneWay" && styles.selectedTripButton,
-            ]}
-            onPress={() => setTripType("oneWay")}
-          >
-            <Text style={styles.tripButtonText}>One Way</Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.tripButton,
-              tripType === "roundTrip" && styles.selectedTripButton,
-            ]}
-            onPress={() => setTripType("roundTrip")}
-          >
-            <Text style={styles.tripButtonText}>Round Trip</Text>
-          </Pressable>
-        </View>
+  optionsContainer: {
+    flexDirection: "row", // Arrange options horizontally
+    justifyContent: "space-between", // Space out the options equally
+    flexWrap: "wrap", // Allow the options to wrap to the next line on smaller screens
+  },
 
-        <View style={styles.dateRow}>
-          {/* Departure Date Container */}
-          <View style={styles.dateContainer}>
-            <Text style={styles.floatingLabel}>Departure Date</Text>
-            <TouchableOpacity
-              style={styles.dateInput}
-              onPress={() => handleDateSelection(true)}
-            >
-              <View>
-                <Icon
-                  name="calendar"
-                  size={15}
-                  color="#888"
-                  style={{ marginRight: 8 }}
-                />
-              </View>
-              <Text style={styles.dateText}>{`${formatDate(
-                departureDate
-              )}`}</Text>
-            </TouchableOpacity>
-          </View>
+  optionCard: {
+    flex: 1, // Each card takes equal width
+    borderWidth: 1,
+    borderColor: "#fff", // Border color for the cards
+    alignItems: "center", // Align items to the center
+    justifyContent: "center", // Center the content vertically and horizontally
+    borderRadius: RFValue(4), // Responsive border radius
+    marginHorizontal: RFValue(2), // Horizontal margin between cards
+    paddingVertical: RFValue(12), // Vertical padding for spacing inside cards
+    backgroundColor: "#f2f2f2",
+  },
 
-          {/* Return Date Container */}
-          <View style={styles.dateContainer}>
-            <Text style={styles.floatingLabel}>Return Date</Text>
-            <TouchableOpacity
-              style={[
-                styles.dateInput,
-                tripType === "oneWay" && styles.disabledDateInput, // Apply disabled style when tripType is "oneWay"
-              ]}
-              onPress={() => handleDateSelection(false)} // Open the return date calendar for round trips
-            >
-              <View>
-                <Icon
-                  name="calendar"
-                  size={15}
-                  color={tripType === "oneWay" ? "#d3d3d3" : "#888"} // Change icon color based on trip type
-                  style={{ marginRight: 8 }}
-                />
-              </View>
-              <Text style={styles.dateText}>{`${formatDate(returnDate)}`}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+  optionText: {
+    fontFamily: "Satoshi-Medium",
+    fontWeight: "500",
+    fontSize: RFValue(11), // Responsive font size for option text
+  },
 
-        {calendarVisible && (
-          <CustomCalendar
-            visible={calendarVisible}
-            flightPrices={{
-              "2024-11-20": 120,
-              "2024-11-21": 150,
-              "2024-11-22": 180,
-            }}
-            minDate={isSelectingDeparture ? today : minReturnDate} // Min date logic for departure and return
-            onDayPress={handleDayPress}
-            onClose={() => setCalendarVisible(false)}
-          />
-        )}
+  selectedOption: {
+    borderColor: "#01493E",
+    backgroundColor: "#f2f2f2", // Light grey background for the selected option
+  },
+  button: {
+    marginTop: RFValue(20), // Responsive margin top
+    backgroundColor: "#01493E", // Green color for the button background
+    paddingVertical: RFValue(14), // Responsive padding for the button
+    borderRadius: RFValue(8), // Responsive border radius
+    alignItems: "center", // Aligns text to the center of the button
+  },
 
-        <Modal
-          transparent={true}
-          visible={showAirportModal}
-          animationType="slide"
-        >
-          {/* Dismiss keyboard on touch outside */}
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <KeyboardAvoidingView
-              style={styles.modalContainer}
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-            >
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Select Airport</Text>
-
-                {/* Search Input */}
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search Airports"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-
-              <ScrollView style={styles.airportList}>
-              {displayedAirports.length > 0 ? (
-  displayedAirports.map((airport, index) => (
-    <TouchableOpacity
-    key={`${airport.IATA}-${airport.City}-${airport.Country}-${index}`}
-    style={styles.airportItem}
-    onPress={() => handleAirportSelect(airport.Name)} // Use airport name for selection
-  >
-    <Text style={styles.airportText}>
-      {airport.Name} ({airport.City}, {airport.Country})
-    </Text>
-  </TouchableOpacity>
-  ))
-) : (
-  <Text style={styles.noResultsText}>No airports found</Text>
-)}
-              </ScrollView>
-
-                {/* Cancel Button */}
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => setShowAirportModal(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </KeyboardAvoidingView>
-          </TouchableWithoutFeedback>
-        </Modal>
-        <View style={styles.locationCards}>
-          {/* From Card */}
-          <TouchableOpacity
-            style={[
-              styles.fromCard,
-              !isFromAirportValid && {
-                borderColor: "#C5012D",
-                borderWidth: 1,
-              },
-            ]}
-            onPress={() => {
-              setSelectedAirportType("from");
-              setShowAirportModal(true);
-            }}
-          >
-            <View style={styles.cardRow}>
-              <Text style={styles.cardTitle}>From</Text>
-              {!isFromAirportValid && (
-                <AntDesign
-                  name="exclamationcircleo"
-                  style={styles.warning_icon}
-                />
-              )}
-            </View>
-            <Text
-              style={styles.cardAirport}
-              numberOfLines={1} // Restrict to a single line
-              ellipsizeMode="tail" // Add "..." at the end if text is truncated
-            >
-              {fromAirport}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Icon Between Cards */}
-          <Image
-            source={require("../../assets/images/Route_icon.png")}
-            style={styles.overlapIcon}
-          />
-
-          {/* To Card */}
-          <TouchableOpacity
-            style={[
-              styles.toCard,
-              !isToAirportValid && { borderColor: "#C5012D", borderWidth: 1 },
-            ]}
-            onPress={() => {
-              setSelectedAirportType("to");
-              setShowAirportModal(true);
-            }}
-          >
-            <View style={styles.cardRow}>
-              <Text style={styles.cardTitle}>To</Text>
-              {!isToAirportValid && (
-                <AntDesign
-                  name="exclamationcircleo"
-                  style={styles.warning_icon}
-                />
-              )}
-            </View>
-            <Text
-              style={styles.cardAirport}
-              numberOfLines={1} // Restrict to a single line
-              ellipsizeMode="tail" // Add "..." at the end if text is truncated
-            >
-              {toAirport}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.passengerClassContainer}>
-          <View style={styles.passengerRow}>
-            <TouchableOpacity
-              style={[
-                styles.passengerCard,
-                !isAdultsValid && { borderColor: "#C5012D", borderWidth: 1 }, // Red border if invalid
-              ]}
-              onPress={handleTravelerModalToggle}
-            >
-              <Text style={styles.passengerLabel}>
-                Travelers{" "}
-                {!isAdultsValid && (
-                  <AntDesign
-                    name="exclamationcircleo"
-                    size={10}
-                    color="#C5012D"
-                  />
-                )}
-              </Text>
-
-              <Text style={styles.passengerCount}>
-                {adults} Ad, {children} Ch, {infants} In
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.classCard,
-                !isClassValid && { borderColor: "#C5012D", borderWidth: 1 }, // Red border if invalid
-              ]}
-              onPress={handleClassModalToggle}
-            >
-              <Text style={styles.classLabel}>
-                Class{" "}
-                {!isClassValid && (
-                  <AntDesign
-                    name="exclamationcircleo"
-                    size={10}
-                    color="#C5012D"
-                  />
-                )}
-              </Text>
-              <Text style={styles.classSelection}>
-                {selectedClass || "Select Class"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Traveler Modal */}
-          <Modal
-            visible={isTravelerModalVisible}
-            animationType="slide"
-            transparent={true}
-          >
-            <View style={styles.modalOverlay}>
-              <View style={styles.travelerModalContainer}>
-                {/* Close Arrow at the Top */}
-                <TouchableOpacity
-                  style={styles.closeArrowContainer}
-                  onPress={handleTravelerModalToggle}
-                >
-                  <Icon
-                    name="arrow-left"
-                    size={30}
-                    color="#000"
-                    style={styles.closeArrowImage}
-                  />
-                </TouchableOpacity>
-                <Text style={styles.travelerModalTitle}>Select Travelers</Text>
-
-                {/* Adults Counter */}
-                <View style={styles.travelerOptionContainer}>
-                  <View>
-                    <Text style={styles.travelerOptionText}>Adults</Text>
-                    <Text style={styles.ageDescription}>12+ Years</Text>
-                  </View>
-                  <View style={styles.counterContainer}>
-                    <TouchableOpacity
-                      style={styles.circleButton}
-                      onPress={() => handleDecrement("adults")}
-                    >
-                      <Text style={styles.minusButton}>—</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.counterValue}>{adults}</Text>
-                    <TouchableOpacity
-                      style={styles.circleButton}
-                      onPress={() => handleIncrement("adults")}
-                    >
-                      <Text style={styles.minusButton}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Children Counter */}
-                <View style={styles.travelerOptionContainer}>
-                  <View>
-                    <Text style={styles.travelerOptionText}>Children</Text>
-                    <Text style={styles.ageDescription}>2-12 Years</Text>
-                  </View>
-                  <View style={styles.counterContainer}>
-                    <TouchableOpacity
-                      style={styles.circleButton}
-                      onPress={() => handleDecrement("children")}
-                    >
-                      <Text style={styles.minusButton}>—</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.counterValue}>{children}</Text>
-                    <TouchableOpacity
-                      style={styles.circleButton}
-                      onPress={() => handleIncrement("children")}
-                    >
-                      <Text style={styles.minusButton}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Infants Counter */}
-                <View style={styles.travelerOptionContainer}>
-                  <View>
-                    <Text style={styles.travelerOptionText}>Infants</Text>
-                    <Text style={styles.ageDescription}>Below 2 Years</Text>
-                  </View>
-                  <View style={styles.counterContainer}>
-                    <TouchableOpacity
-                      style={styles.circleButton}
-                      onPress={() => handleDecrement("infants")}
-                    >
-                      <Text style={styles.minusButton}>—</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.counterValue}>{infants}</Text>
-                    <TouchableOpacity
-                      style={styles.circleButton}
-                      onPress={() => handleIncrement("infants")}
-                    >
-                      <Text style={styles.minusButton}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={handleTravelerModalToggle}
-                >
-                  <Text style={styles.closeButtonText}>Submit</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-
-          {/* Class Modal */}
-          <Modal
-            visible={isClassModalVisible}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={handleClassModalToggle} // Close modal on Android back press
-          >
-            <View style={styles.modalOverlay1}>
-              <View style={styles.modalContent1}>
-                <Text style={styles.modalTitle1}>Select Class</Text>
-                {["Economy", "Business", "First"].map((cls) => (
-                  <TouchableOpacity
-                    key={cls}
-                    onPress={() => handleClassSelection(cls)} // Set class when an option is selected
-                    style={styles.modalOption1}
-                  >
-                    {/* RadioButton for each class */}
-                    <RadioButton
-                      value={cls}
-                      status={selectedClass === cls ? "checked" : "unchecked"} // Check if this option is selected
-                      onPress={() => handleClassSelection(cls)}
-                      color="#0B3E36" // Handle radio button press
-                    />
-                    <Text style={styles.classOption1}>{cls}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </Modal>
-        </View>
-
-        <View>
-          {/* Heading */}
-          <Text style={styles.heading}>Special Fare Options</Text>
-
-          {/* Fare Option Buttons / Cards */}
-          <View style={styles.optionsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.optionCard,
-                selectedOption === "Student" && styles.selectedOption,
-              ]}
-              onPress={() => handleOptionSelect("Student")}
-            >
-              <Text style={styles.optionText}>Student</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.optionCard,
-                selectedOption === "Senior Citizen" && styles.selectedOption,
-              ]}
-              onPress={() => handleOptionSelect("Senior Citizen")}
-            >
-              <Text style={styles.optionText}>Senior Citizen</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.optionCard,
-                selectedOption === "Armed Force " && styles.selectedOption,
-              ]}
-              onPress={() => handleOptionSelect("Armed Force ")}
-            >
-              <Text style={styles.optionText}>Armed Force</Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.button} onPress={handlePress}>
-            <Text style={styles.buttonText}>Search Flights</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </View>
-  );
-};
-
-export default HomeScreen;
+  buttonText: {
+    fontFamily: "Satoshi-Bold",
+    color: "#fff", // White text color
+    fontSize: RFValue(14), // Responsive font size for button text
+    fontWeight: "bold", // Bold font for emphasis
+  },
+});
+export default styles;

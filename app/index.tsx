@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-<<<<<<< HEAD
 import MainNavigator from "./Navigation/MainNavigator"; // Import the MainNavigator
-=======
-import MainNavigator from "./MainNavigator"; // Import the MainNavigator
->>>>>>> c63d341ea6c6c048be07f74db82be9a3975fc98e
 import LoadingScreen from "./LoadingScreen"; // Your custom Loading Screen component
 
 const App = () => {
