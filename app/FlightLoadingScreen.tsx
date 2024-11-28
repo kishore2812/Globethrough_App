@@ -35,7 +35,6 @@ const FlightSearchLoadingScreen = () => {
         <Image
           source={require("../assets/images/Flight_Animation_Loading.gif")}
           style={styles.loadingImage}
-          resizeMode="cover"
         />
       </Animated.View>
       {/* Heading and Paragraph above the GIF */}

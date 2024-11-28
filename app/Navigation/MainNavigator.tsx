@@ -29,7 +29,7 @@ const MainNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
+    
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ color, size }) => {
@@ -84,7 +84,7 @@ const MainNavigator: React.FC = () => {
         <Tab.Screen name="Offers" component={OffersScreen} />
         <Tab.Screen name="Account" component={AccountScreen} />
       </Tab.Navigator>
-    </NavigationContainer>
+
   );
 };
 
