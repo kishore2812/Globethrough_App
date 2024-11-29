@@ -25,7 +25,10 @@ import { RadioButton } from "react-native-paper";
 import airportData from "../HomeScreen/aiport.json";
 import CustomCalendar from "../Components/CustomCalendar";
 import { useFonts } from "expo-font";
+import { setAdults, setChildren, setDepartureDate, setFlightBookingDetails, setFromAirport, setFromAirportData, setInfants, setReturnDate, setSelectedOption, setToAirport, setToAirportData } from '../StateManagement/FlightBookingState'; 
+import { useDispatch, useSelector } from "react-redux";
 
+  
 type Airport = {
   ID: number;
   Name: string;
@@ -43,39 +46,45 @@ type Airport = {
   Source: string;
 };
 
+
 const FlightBookingComponent = ({ navigation }: any) => {
-  const [filteredAirports, setFilteredAirports] = useState<Airport[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [departureDate, setDepartureDate] = useState<Date | null>(null);
-  const [returnDate, setReturnDate] = useState<Date | null>(null);
-  const [isSelectingDeparture, setIsSelectingDeparture] = useState(true);
-  const [tripType, setTripType] = useState<"oneWay" | "roundTrip">("oneWay");
-  const [showAirportModal, setShowAirportModal] = useState(false);
-  const [selectedAirportType, setSelectedAirportType] = useState<"from" | "to">(
-    "from"
-  );
-  const [fromAirport, setFromAirport] = useState<string>("Select Airport");
-  const [toAirport, setToAirport] = useState<string>("Select Airport");
-  const [fromAirportData, setFromAirportData] = useState<{
-    IATA: string;
-    City: string;
-  } | null>(null);
-  const [toAirportData, setToAirportData] = useState<{
-    IATA: string;
-    City: string;
-  } | null>(null);
+    // Redux hooks for managing state
+    const dispatch = useDispatch();
+    const { 
+        fromAirportData,
+        toAirportData,
+      tripType, 
+      departureDate, 
+      returnDate, 
+      fromAirport, 
+      toAirport, 
+      adults, 
+      children, 
+      infants, 
+      selectedClass, 
+      selectedOption 
+    } = useSelector((state: any) => state.flightBooking);
+    const [filteredAirports, setFilteredAirports] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isSelectingDeparture, setIsSelectingDeparture] = useState(true);
+    const [showAirportModal, setShowAirportModal] = useState(false);
+    const [selectedAirportType, setSelectedAirportType] = useState<"from" | "to">("from");
+    const [calendarVisible, setCalendarVisible] = useState(false);
+    const [isTravelerModalVisible, setTravelerModalVisible] = useState(false);
+    const [isClassModalVisible, setClassModalVisible] = useState(false);
+
+
+
+
+    
+
   const [defaultAirportsCount] = useState(10);
   const [showMoreAirports, setShowMoreAirports] = useState(false);
   const displayedAirports = showMoreAirports
     ? filteredAirports
     : filteredAirports.slice(0, defaultAirportsCount);
 
-  const [isTravelerModalVisible, setTravelerModalVisible] = useState(false);
-  const [isClassModalVisible, setClassModalVisible] = useState(false);
-  const [adults, setAdults] = useState(0);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [selectedClass, setSelectedClass] = useState("");
+
 
   //for responive
   const { width, height } = Dimensions.get("window");
@@ -91,6 +100,7 @@ const FlightBookingComponent = ({ navigation }: any) => {
   if (!fontsLoaded) {
     return <ActivityIndicator size="large" />;
   }
+
   //for travelller popup
   const handleTravelerModalToggle = () => {
     setTravelerModalVisible(!isTravelerModalVisible);
@@ -100,26 +110,33 @@ const FlightBookingComponent = ({ navigation }: any) => {
     setClassModalVisible(!isClassModalVisible);
   };
 
-  //for plus button inside traveller popup
+  // for plus button inside traveller popup
   const handleIncrement = (type: "adults" | "children" | "infants") => {
     if (type === "adults") {
-      setAdults(adults + 1);
-      setIsAdultsValid(adults + 1 > 0); // Update validation after increment
+      dispatch(setAdults(adults + 1))// Dispatch action to increment adults count
+      setIsAdultsValid(adults + 1 > 0); 
     } else if (type === "children") {
-      setChildren(children + 1);
+      dispatch(setChildren(children + 1)); // Dispatch action to increment children count
     } else if (type === "infants") {
-      setInfants(infants + 1);
+      dispatch(setInfants(infants + 1)); // Dispatch action to increment infants count
     }
   };
+  
 
-  //for minus button inside traveller popup
+  // for minus button inside traveller popup
   const handleDecrement = (type: "adults" | "children" | "infants") => {
-    if (type === "adults" && adults > 0) setAdults(adults - 1);
-    else if (type === "children" && children > 0) setChildren(children - 1);
-    else if (type === "infants" && infants > 0) setInfants(infants - 1);
+    if (type === "adults" && adults > 0) {
+      dispatch(setAdults(adults - 1)); // Dispatch action to decrement adults count if greater than 0
+    } else if (type === "children" && children > 0) {
+      dispatch(setChildren(children - 1)); // Dispatch action to decrement children count if greater than 0
+    } else if (type === "infants" && infants > 0) {
+      dispatch(setInfants(infants - 1)); // Dispatch action to decrement infants count if greater than 0
+    }
   };
+  
 
-  //for flight search
+
+  // Flight search
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setFilteredAirports([]); // Clear airports if search query is empty
@@ -146,22 +163,22 @@ const FlightBookingComponent = ({ navigation }: any) => {
     setFilteredAirports(filtered);
   }, [searchQuery]);
 
-  // Handle airport selection, explicitly typing airportName as a string
-  const handleAirportSelect = (airport: Airport): void => {
-    if (selectedAirportType === "from") {
-      setFromAirport(airport.Name); // Set airport name
-      setFromAirportData({ IATA: airport.IATA, City: airport.City }); // Save IATA and city
-      setIsFromAirportValid(airport.Name !== "Select Airport");
-    } else {
-      setToAirport(airport.Name); // Set airport name
-      setToAirportData({ IATA: airport.IATA, City: airport.City }); // Save IATA and city
-      setIsToAirportValid(airport.Name !== "Select Airport");
+ // Handle airport selection and dispatch actions to Redux
+  // Handle airport selection
+  const handleAirportSelect = (airport: { Name: string; IATA: string; City: string }): void => {
+    if (selectedAirportType === 'from') {
+      dispatch(setFromAirport(airport.Name)); // Store only the airport name
+      dispatch(setFromAirportData({ IATA: airport.IATA, City: airport.City })); 
+      setIsFromAirportValid(airport.Name !== 'Select Airport');
+    } else if (selectedAirportType === 'to') {
+      dispatch(setToAirport(airport.Name)); // Store only the airport name
+      dispatch(setToAirportData({ IATA: airport.IATA, City: airport.City })); // Store IATA and City
+      setIsToAirportValid(airport.Name !== 'Select Airport');
     }
     setShowAirportModal(false);
     setSearchQuery(""); // Clear search query
   };
 
-  const [calendarVisible, setCalendarVisible] = useState(false);
 
   const today = new Date().toISOString().split("T")[0]; // Today's date in 'YYYY-MM-DD' format
   const minReturnDate = departureDate
@@ -180,66 +197,74 @@ const FlightBookingComponent = ({ navigation }: any) => {
     return date.toLocaleDateString("en-US", options);
   };
 
-  // Function to handle day press from calendar
+
+
   const handleDayPress = (day: { dateString: string }) => {
-    const selectedDate = new Date(day.dateString);
+    const selectedDate = new Date(day.dateString); // Convert to Date object
 
     if (isSelectingDeparture) {
-      // If departure date is selected, set the return date to the departure date if it's the first time
-      setDepartureDate(selectedDate);
+      // Dispatch selected date as Date object
+      dispatch(setDepartureDate(selectedDate));
 
       if (!returnDate) {
-        setReturnDate(selectedDate); // Set return date to the same as departure for the first time
-      } else if (selectedDate > returnDate) {
-        setReturnDate(selectedDate); // Reset return date if departure date is after the current return date
+        // If return date is not selected, set it as the departure date
+        dispatch(setReturnDate(selectedDate));
+      } else if (selectedDate > new Date(returnDate)) {
+        // If the return date is earlier than the selected departure date, reset return date
+        dispatch(setReturnDate(selectedDate));
       }
     } else {
-      // Set return date as long as it's after departure date or the same day
-      if (selectedDate >= (departureDate || new Date())) {
-        setReturnDate(selectedDate);
+      // Validate that return date is after departure date
+      const departureDateObj = new Date(departureDate);
+      if (selectedDate >= departureDateObj) {
+        dispatch(setReturnDate(selectedDate)); // Dispatch return date as Date object
       } else {
         alert("Return date must be after the departure date.");
       }
     }
 
+    // Close the calendar popup
     setCalendarVisible(false);
   };
+  
+  
 
+  // Trip type change handler (One way or Round trip)
   const handleTripTypeChange = (type: "oneWay" | "roundTrip") => {
-    setTripType(type);
-    if (type === "oneWay") {
-      setReturnDate(null); // Reset return date for one-way trips
-    }
+    dispatch(setFlightBookingDetails({ tripType: type }));
   };
 
-  const handleDateSelection = (isDeparture: boolean) => {
+ // Handle date selection popup toggle
+ const handleDateSelection = (isDeparture: boolean) => {
     if (tripType === "oneWay" && !isDeparture) {
-      alert("Return date is only Applicable for Round Trip");
-      return; // Prevent opening return date calendar for one-way trips
+      alert("Return date is only applicable for Round Trip.");
+      return;
     }
     setIsSelectingDeparture(isDeparture);
     setCalendarVisible(true);
   };
 
-  //class selection economy,business or first
+  // Modal toggle for class selection
   const handleClassSelection = (cls: string) => {
-    setSelectedClass(cls); // Set the selected class
-    setClassModalVisible(false); // Close the modal after selection
+    dispatch(setFlightBookingDetails({ selectedClass: cls }));
+    setClassModalVisible(false);
     setIsClassValid(cls !== "");
   };
 
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+
 
   // Function to handle button press and set selected option
   const handleOptionSelect = (option: string) => {
-    setSelectedOption((prevOption) => (prevOption === option ? null : option));
+    dispatch(setSelectedOption(selectedOption === option ? null : option));
   };
+
   //validation for selection of user fields
   const [isFromAirportValid, setIsFromAirportValid] = useState(true);
   const [isToAirportValid, setIsToAirportValid] = useState(true);
   const [isAdultsValid, setIsAdultsValid] = useState(true);
   const [isClassValid, setIsClassValid] = useState(true);
 
+  // Validation and final submission
   const handlePress = () => {
     // Check if from and to airports are selected
     const isFromAirportSelected = fromAirport !== "Select Airport";
@@ -266,22 +291,21 @@ const FlightBookingComponent = ({ navigation }: any) => {
     ) {
       return; // Prevent further actions if any validation fails
     }
-    // render FlightList Screen
-    navigation.navigate("FlightListScreen", {
-      fromAirport: { ...fromAirportData }, // Send IATA and city of the from airport
-      toAirport: { ...toAirportData }, // Send IATA and city of the to airport
-      adults,
-      selectedClass,
-      tripType,
-      children,
-      infants,
-      departureDate: departureDate
-        ? departureDate.toISOString()
-        : new Date().toISOString(), // Use today's date if not selected
-      returnDate: returnDate ? returnDate.toISOString() : null, // Convert to ISO string
-      selectedOption,
-    });
+navigation.navigate('FlightListScreen', {
+  fromAirport: fromAirportData, // Pass IATA and City
+  toAirport: toAirportData,     // Pass IATA and City
+  adults,
+  selectedClass,
+  tripType,
+  children,
+  infants,
+  departureDate: departureDate ? departureDate.toISOString() : new Date().toISOString(),
+  returnDate: returnDate ? returnDate.toISOString() : null,
+  selectedOption,
+});
+      
   };
+
 
   //Animation functions
   const slideAnim = useRef(new Animated.Value(height)).current; // Start off-screen at the bottom
@@ -313,7 +337,7 @@ const FlightBookingComponent = ({ navigation }: any) => {
   }, []); // Run this effect only when isLoading changes
 
   return (
-
+    
     <View style={styles.container}>
 
       <Animated.View
@@ -323,9 +347,9 @@ const FlightBookingComponent = ({ navigation }: any) => {
           <Pressable
             style={[
               styles.tripButton,
-              tripType === "oneWay" && styles.selectedTripButton,
+            tripType === "oneWay" && styles.selectedTripButton,
             ]}
-            onPress={() => setTripType("oneWay")}
+            onPress={() => handleTripTypeChange("oneWay")}
           >
             <Text style={styles.tripButtonText}>One Way</Text>
           </Pressable>
@@ -334,7 +358,7 @@ const FlightBookingComponent = ({ navigation }: any) => {
               styles.tripButton,
               tripType === "roundTrip" && styles.selectedTripButton,
             ]}
-            onPress={() => setTripType("roundTrip")}
+            onPress={() =>handleTripTypeChange("roundTrip")}
           >
             <Text style={styles.tripButtonText}>Round Trip</Text>
           </Pressable>

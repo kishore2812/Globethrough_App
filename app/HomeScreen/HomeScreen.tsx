@@ -17,6 +17,9 @@ import FlightBookingComponent from "../Components/FlightBookingComponent";
 const HomeScreen = ({ navigation }: any) => {
 
 
+
+
+
   //for responive
   const { width, height } = Dimensions.get("window");
 

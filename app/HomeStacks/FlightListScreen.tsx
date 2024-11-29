@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from "react-native";
 import FlightLoadingScreen from "../FlightLoadingScreen"; // Importing custom loading screen
 import FlightBookingComponent from "../Components/FlightBookingComponent";
 
-const FlightListScreen = ({ route,navigation }: any) => {
+const FlightListScreen = ({ route, navigation }: any) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const {
@@ -45,18 +45,32 @@ const FlightListScreen = ({ route,navigation }: any) => {
       <Text style={styles.detail}>
         Return Date: {returnDateObj ? returnDateObj.toDateString() : "N/A"}
       </Text>
-      <Text>From Airport IATA: {fromAirport.IATA}</Text>
-      <Text>From Airport City: {fromAirport.City}</Text>
-      <Text>To Airport IATA: {toAirport.IATA}</Text>
-      <Text>To Airport City: {toAirport.City}</Text>
+      {/* Ensure fromAirport and toAirport exist before accessing properties */}
+      {fromAirport && fromAirport.IATA && fromAirport.City ? (
+        <>
+          <Text>From Airport IATA: {fromAirport.IATA}</Text>
+          <Text>From Airport City: {fromAirport.City}</Text>
+        </>
+      ) : (
+        <Text>From Airport data is unavailable</Text>
+      )}
+      {toAirport && toAirport.IATA && toAirport.City ? (
+        <>
+          <Text>To Airport IATA: {toAirport.IATA}</Text>
+          <Text>To Airport City: {toAirport.City}</Text>
+        </>
+      ) : (
+        <Text>To Airport data is unavailable</Text>
+      )}
       <Text style={styles.detail}>Adults: {adults}</Text>
       <Text style={styles.detail}>Children: {children}</Text>
       <Text style={styles.detail}>Infants: {infants}</Text>
       <Text style={styles.detail}>Class: {selectedClass}</Text>
-      <Text style={styles.detail}>Class: {selectedOption}</Text>
+      <Text style={styles.detail}>Option: {selectedOption}</Text>
+      
+      {/* Pass tripType to the FlightBookingComponent */}
       <FlightBookingComponent navigation={navigation} />
     </View>
-
   );
 };
 
