@@ -163,12 +163,6 @@ const HomeScreen = ({ navigation }: any) => {
 
   const [calendarVisible, setCalendarVisible] = useState(false);
 
-  const flightPrices = {
-    "2024-11-20": 120,
-    "2024-11-21": 150,
-    "2024-11-22": 180,
-  };
-
   const today = new Date().toISOString().split("T")[0]; // Today's date in 'YYYY-MM-DD' format
   const minReturnDate = departureDate
     ? departureDate.toISOString().split("T")[0]

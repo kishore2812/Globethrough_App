@@ -1,9 +1,9 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import AccountScreen from "../AccountScreen/AccountScreen";
-import PersonalInfo from "../AccountScreen/PersonalInfo";
-import { UserProvider } from "../AccountScreen/UserContext";
-import customerService from "../AccountScreen/CustomerService";
+import AccountScreen from "../AccountStacks/AccountScreen";
+import PersonalInfo from "../AccountStacks/PersonalInfo";
+import { UserProvider } from "../AccountStacks/UserContext";
+import customerService from "../AccountStacks/CustomerService";
 
 const Stack = createStackNavigator();
 
