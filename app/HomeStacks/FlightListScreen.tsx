@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import FlightLoadingScreen from "../FlightLoadingScreen"; // Importing custom loading screen
+import FlightBookingComponent from "../Components/FlightBookingComponent";
 
-const FlightListScreen = ({ route }: any) => {
+const FlightListScreen = ({ route,navigation }: any) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const {
@@ -53,7 +54,9 @@ const FlightListScreen = ({ route }: any) => {
       <Text style={styles.detail}>Infants: {infants}</Text>
       <Text style={styles.detail}>Class: {selectedClass}</Text>
       <Text style={styles.detail}>Class: {selectedOption}</Text>
+      <FlightBookingComponent navigation={navigation} />
     </View>
+
   );
 };
 
