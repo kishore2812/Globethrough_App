@@ -29,7 +29,7 @@ interface CustomCalendarProps {
   minReturnDate?: string;
 }
 
-const screenWidth = Dimensions.get("window").width;
+const screenHeight = Dimensions.get("window").height;
 
 const CustomCalendar: React.FC<CustomCalendarProps> = React.memo(
   ({ flightPrices, onDayPress, visible, onClose }) => {
@@ -47,7 +47,8 @@ const CustomCalendar: React.FC<CustomCalendarProps> = React.memo(
           <View style={styles.calendarContainer}>
             <CalendarList
               markingType="custom"
-              horizontal={false}
+              horizontal={false} // Enable horizontal scrolling
+              pagingEnabled={true} // Snap to each page (set of two calendars)
               onDayPress={(day: DateData) => {
                 if (day && day.dateString) {
                   onDayPress({
@@ -61,10 +62,11 @@ const CustomCalendar: React.FC<CustomCalendarProps> = React.memo(
                 }
               }}
               pastScrollRange={0}
-              futureScrollRange={60}
+              futureScrollRange={13}
               scrollEnabled={true}
-              showScrollIndicator={true}
+              showScrollIndicator={false}
               current={formattedMinDate}
+              calendarHeight={screenHeight / 2}
               dayComponent={({ date }) => {
                 const dateKey = date?.dateString || "";
                 const price = flightPrices[dateKey];
@@ -112,6 +114,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   calendarContainer: {
+    height: screenHeight * 1,
     width: "100%",
     backgroundColor: "#fff",
     borderRadius: 10,
